@@ -10,9 +10,11 @@ redirect_from:
 
 <span class='anchor' id='about-me'></span>
 
-I am a Ph.D. student in Computer Engineering at the **University of California, Santa Barbara**, advised by **Prof. Zheng Zhang**, where I also received my M.S. in Computer Engineering. Before that, I received my B.S. in Electronic Information Engineering from **Huazhong University of Science & Technology**.
+I am a Ph.D. student in Computer Engineering at the **University of California, Santa Barbara**, proudly advised by **Prof. Zheng Zhang**, where I also received my M.S. in Computer Engineering. Before that, I received my B.S. in Electronic Information Engineering from **Huazhong University of Science & Technology**.
 
 My research is on **zeroth-order and memory-efficient optimization** — what remains possible when gradients are expensive, unreliable, or simply unavailable. On the machine learning side, I design gradient-free training algorithms that fine-tune large language models at inference-level memory, and work more broadly on optimizers and parameter-efficient methods for large-scale training. On the hardware side, I bring the same machinery to **analog/RF circuit design**, where the simulator is a black box and every evaluation is expensive; I am currently extending this toward uncertainty-aware design under process variations.
+
+I am also broadly interested in **agentic LLMs** — in particular how tool-using agents can be brought into EDA workflows — as well as the **pre- and post-training** of large language models and **hardware/software co-design**.
 
 You can find more details on <a href='https://scholar.google.com/citations?user=xBvnXWsAAAAJ&hl=en'>Google Scholar</a> and my <a href='{{ site.baseurl }}/cv/'>CV</a>.
 
@@ -32,6 +34,7 @@ You can find more details on <a href='https://scholar.google.com/citations?user=
 # 📝 Publications 
 
 ## Circuit Design Optimization
+{: .pub-group}
 
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge">Under review</div><img src='{{ site.baseurl }}/images/zoaf.png' alt="ZOAF" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
@@ -47,6 +50,7 @@ You can find more details on <a href='https://scholar.google.com/citations?user=
 </div>
 
 ## Machine Learning Optimization
+{: .pub-group}
 
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge">EMNLP 2026 Findings</div><img src='{{ site.baseurl }}/images/grzo.png' alt="GRZO" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">

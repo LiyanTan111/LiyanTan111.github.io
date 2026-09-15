@@ -23,7 +23,7 @@ baidu_site_verification  :  # get baidu_site_verification from https://ziyuan.ba
 author:
   name             : "Liyan Tan"
   avatar           : "images/profile.jpg"
-  bio              : "Ph.D. Student in Computer Engineering, UC Santa Barbara. Efficient LLM optimization, EDA."
+  bio              : "<span class='bio-line'>Ph.D. Student in Computer Engineering, UC Santa Barbara</span><span class='bio-line'>Efficient LLM optimization, EDA</span>"
   location         : "Goleta, CA, USA"
   employer         : "UC Santa Barbara"
   pubmed           : 

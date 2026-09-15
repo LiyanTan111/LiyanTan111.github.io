@@ -17,7 +17,7 @@ paper:
   date: "2026-06-01"
   arxiv: "2606.02857"
   doi: "10.48550/arXiv.2606.02857"
-  tldr: "One perturbation per example instead of one per batch. GRZO raises the number of zeroth-order gradient directions from one to the batch size at no extra forward cost, beating MeZO by +3.0 average accuracy while staying within 0.5% of the forward-only inference memory floor."
+  tldr: "One perturbation per example instead of one per batch. GRZO raises the number of zeroth-order gradient directions from one to the batch size at no extra forward cost, beating MeZO by +3.0 average accuracy while staying within 0.5% of the forward-only inference memory floor. It is a drop-in replacement for MeZO and composes with its sparse, low-rank and quantized variants, lifting them by +4.9 on average."
   problem: "Zeroth-order fine-tuning removes backpropagation's memory cost, but one perturbation shared across the mini-batch makes the gradient estimate too noisy to match first-order training. That variance is what keeps ZO methods from closing the accuracy gap."
   method: "GRZO gives every example its own pseudo-independent perturbation and combines the per-example losses by group-relative normalization — B gradient directions per step instead of one, at the same forward cost and with peak memory still at the inference floor."
   result: "Highest accuracy among ZO methods at inference-level memory: 81.6% against MeZO's 74.4% on RTE (Llama3-8B), +3.0 on average, at 17.82 GB peak memory — 0.5% above the forward-only floor. The cost is a 23% per-step time premium, which it repays by converging fastest in wall-clock time. Dropped into sparse, low-rank, and quantized ZO variants it lifts them by +4.9 on average."
