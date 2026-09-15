@@ -10,7 +10,7 @@ redirect_from:
 
 <span class='anchor' id='about-me'></span>
 
-I am a Ph.D. student in Computer Engineering at the **University of California, Santa Barbara**, proudly advised by **Prof. Zheng Zhang**, where I also received my M.S. in Computer Engineering. Before that, I received my B.S. in Electronic Information Engineering from **Huazhong University of Science & Technology**.
+I am a Ph.D. student in Computer Engineering at the **University of California, Santa Barbara**, proudly advised by [**Prof. Zheng Zhang**](https://web.ece.ucsb.edu/~zhengzhang/), where I also received my M.S. in Computer Engineering. Before that, I received my B.S. in Electronic Information Engineering from **Huazhong University of Science & Technology**.
 
 My research is on **zeroth-order and memory-efficient optimization** — what remains possible when gradients are expensive, unreliable, or simply unavailable. On the machine learning side, I design gradient-free training algorithms that fine-tune large language models at inference-level memory, and work more broadly on optimizers and parameter-efficient methods for large-scale training. On the hardware side, I bring the same machinery to **analog/RF circuit design**, where the simulator is a black box and every evaluation is expensive; I am currently extending this toward uncertainty-aware design under process variations.
 
