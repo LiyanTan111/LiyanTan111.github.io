@@ -52,7 +52,7 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 ## Machine Learning Optimization
 {: .pub-group}
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">EMNLP 2026 Findings</div><img src='{{ site.baseurl }}/images/grzo.png' alt="GRZO" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">EMNLP 2026</div><img src='{{ site.baseurl }}/images/grzo.png' alt="GRZO" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [GRZO: Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning]({{ site.baseurl }}/papers/grzo/)

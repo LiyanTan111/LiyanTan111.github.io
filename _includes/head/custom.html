@@ -32,7 +32,7 @@
 <meta name="citation_title" content="{{ page.title | escape }}">
 {% for a in p.authors %}<meta name="citation_author" content="{{ a | escape }}">
 {% endfor %}<meta name="citation_publication_date" content="{{ p.year }}">
-<meta name="citation_journal_title" content="{{ p.venue | escape }}">
+<meta name="citation_journal_title" content="{{ p.venue_meta | default: p.venue | escape }}">
 {% if p.arxiv %}<meta name="citation_arxiv_id" content="{{ p.arxiv }}">
 <meta name="citation_pdf_url" content="https://arxiv.org/pdf/{{ p.arxiv }}">
 {% endif %}{% if p.doi %}<meta name="citation_doi" content="{{ p.doi }}">
@@ -47,7 +47,7 @@
   "author": [{% for a in p.authors %}{"@type": "Person", "name": {{ a | jsonify }}}{% unless forloop.last %},{% endunless %}{% endfor %}],
   "datePublished": {{ p.date | jsonify }},
   "url": "{{ page.url | absolute_url }}",
-  "publisher": {"@type": "Organization", "name": {{ p.venue | jsonify }}}{% if p.doi %},
+  "publisher": {"@type": "Organization", "name": {{ p.venue_meta | default: p.venue | jsonify }}}{% if p.doi %},
   "identifier": "https://doi.org/{{ p.doi }}"{% endif %}{% if p.figures %},
   "image": [{% for f in p.figures %}{{ f.src | absolute_url | jsonify }}{% unless forloop.last %},{% endunless %}{% endfor %}]{% endif %}
 }

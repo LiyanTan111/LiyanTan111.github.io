@@ -409,3 +409,12 @@ a:hover { color: mix(#000, $accent, 22%); }
 /* 第一个分组紧跟大标题，不需要那么大的上边距 */
 .page__content h1 + h2.pub-group { margin-top: 1.5em; }
 .paper-box + h2.pub-group { margin-top: 3em; }
+
+/* ---------- 修正：大标题不要盖住上一段文字 ---------- */
+/* 模版用一个 height:2em、margin-top:-2em 的伪元素做滚动偏移，
+   这让 h1 的盒子向上压住前一段，段落文字既选不中也点不到链接。
+   改用 scroll-margin-top 实现同样的偏移。 */
+.page__content h1::before,
+.page__content .anchor::before { display: none; }
+.page__content h1 { scroll-margin-top: 2em; }
+.page__content .anchor { display: block; scroll-margin-top: 2em; }

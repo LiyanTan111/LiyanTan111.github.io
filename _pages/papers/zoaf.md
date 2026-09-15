@@ -12,7 +12,8 @@ paper:
     - Ben F. Jamroz
     - Ari Feldman
     - Zheng Zhang
-  venue: "Under review at IEEE TCAD"
+  venue: "Under review"
+  venue_meta: "arXiv preprint"
   year: 2026
   date: "2026-06-01"
   arxiv: "2606.02869"
