@@ -393,24 +393,19 @@ a:hover { color: mix(#000, $accent, 22%); }
 
 /* ---------- Publications 的两个分组标题 ---------- */
 .page__content h2.pub-group {
-    display: flex;
-    align-items: center;
-    gap: .85em;
-    margin: 2.4em 0 .1em;
-    font-size: .92em;
+    display: block;
+    margin: 2.6em 0 .2em;
+    padding: .42em .85em;
+    font-size: 1.1em;
     font-weight: 700;
-    line-height: 1.3;
-    letter-spacing: .1em;
+    line-height: 1.35;
+    letter-spacing: .07em;
     text-transform: uppercase;
-    color: $accent;
-}
-.page__content h2.pub-group::after {
-    content: '';
-    flex: 1 1 auto;
-    height: 1px;
-    background: linear-gradient(to right, rgba(10, 102, 114, .4), rgba(10, 102, 114, 0));
+    color: $accent-deep;
+    background: linear-gradient(to right, #e7f1f2 0%, #f3f8f9 55%, rgba(243, 248, 249, 0) 100%);
+    border-left: 4px solid $accent;
+    border-radius: 2px;
 }
 /* 第一个分组紧跟大标题，不需要那么大的上边距 */
-.page__content h1 + h2.pub-group { margin-top: 1.4em; }
-/* 分组内最后一张卡片不画分隔线，分组之间靠标题隔开 */
-.paper-box + h2.pub-group { margin-top: 2.8em; }
+.page__content h1 + h2.pub-group { margin-top: 1.5em; }
+.paper-box + h2.pub-group { margin-top: 3em; }
