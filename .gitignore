@@ -4,7 +4,8 @@ _site/
 .jekyll-cache/
 .sass-cache/
 .bundle/
-vendor/
+# 只忽略顶层 bundler 的 vendor，不要连带吞掉 _sass/vendor（主题构建需要它）
+/vendor/
 dist/
 .astro/
 
@@ -13,6 +14,9 @@ dist/
 
 # 桌面端回传的中间文件
 Claude outputs/
+
+# jQuery 等原始脚本；_config.yml 已把它排除在构建外，站点只用打包好的 main.min.js
+assets/js/vendor/
 
 # 本地素材与草稿（不进公开仓库）
 photo.jpg
