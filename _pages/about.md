@@ -16,7 +16,7 @@ My research is on **zeroth-order and memory-efficient optimization** — what re
 
 I am also broadly interested in **agentic LLMs** — in particular how tool-using agents can be brought into EDA workflows — as well as the **pre- and post-training** of large language models and **hardware/software co-design**.
 
-You can find more details on <a href='https://scholar.google.com/citations?user=xBvnXWsAAAAJ&hl=en'>Google Scholar</a> and my <a href='{{ site.baseurl }}/cv/'>CV</a>.
+You can find more details on [Google Scholar](https://scholar.google.com/citations?user=xBvnXWsAAAAJ&hl=en) and my [CV]({{ site.baseurl }}/cv/).
 
 # 📖 Education
 - *2025.04 - 2028 (expected)*, **Ph.D. in Computer Engineering**, UC Santa Barbara
