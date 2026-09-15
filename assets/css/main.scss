@@ -280,3 +280,76 @@ a:hover { color: mix(#000, $accent, 22%); }
 
 /* 论文卡片之间的分隔线淡一点 */
 .paper-box { border-bottom-color: #f0f1f2; }
+
+
+/* ---------- 论文页：并排图 + 网页版表格 ---------- */
+.fig-row {
+    display: flex;
+    gap: 1.1em;
+    align-items: flex-end;
+    margin: 2em 0 .6em;
+    flex-wrap: wrap;
+
+    > div { flex: 1 1 260px; }
+
+    img {
+        width: 100%;
+        display: block;
+        border: 1px solid #e6e8eb;
+        border-radius: 3px;
+        padding: 8px;
+        background: #fff;
+    }
+}
+.fig-row + .fig-caption { margin-top: 0; }
+
+.fig-caption {
+    font-size: .85em;
+    line-height: 1.55;
+    color: #6f7780;
+    margin: .6em 0 2em;
+}
+
+.paper-table {
+    overflow-x: auto;
+    margin: 1.2em 0 .6em;
+
+    table {
+        width: 100%;
+        font-size: .82em;
+        border-collapse: collapse;
+        white-space: nowrap;
+    }
+
+    th, td {
+        padding: .38em .6em;
+        border-bottom: 1px solid #ecedef;
+        text-align: center;
+    }
+
+    th { background: #f4f6f7; font-weight: 700; border-bottom: 1px solid #dcdfe2; }
+    th:first-child, td:first-child { text-align: left; white-space: nowrap; }
+
+    /* 分组标题行 */
+    .grp td {
+        background: #f9fafb;
+        font-weight: 700;
+        text-align: left;
+        color: #444;
+        font-size: .95em;
+    }
+
+    /* 我们的方法 */
+    .ours td { background: #eef5f6; font-weight: 600; }
+
+    /* 一阶方法标记 */
+    .fo td:first-child::before {
+        content: '●';
+        color: #e08a2e;
+        margin-right: .45em;
+        font-size: .8em;
+    }
+}
+
+.dpos { color: #1a7f4b; font-size: .9em; }
+.dneg { color: #b03a2e; font-size: .9em; }

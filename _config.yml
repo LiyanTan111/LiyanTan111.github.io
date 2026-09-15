@@ -8,9 +8,8 @@
 # Site Settings
 title                    : "Liyan Tan"
 url                      : "https://liyantan111.github.io"
-baseurl                  : "/Liyan-homepage"
 description              : "Liyan Tan — Ph.D. student at UC Santa Barbara working on zeroth-order and memory-efficient optimization for large language model fine-tuning and analog/RF circuit design."
-repository               : "LiyanTan111/Liyan-homepage"
+repository               : "LiyanTan111/LiyanTan111.github.io"
 
 # google analytics
 google_analytics_id      :  # get google_analytics_id from https://analytics.google.com/analytics/
@@ -38,7 +37,7 @@ author:
   flickr           :
   facebook         :
   foursquare       :
-  github           : "liyantan"
+  github           : "LiyanTan111"
   google_plus      :
   keybase          :
   instagram        :

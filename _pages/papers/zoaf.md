@@ -26,14 +26,6 @@ paper:
       kind: method
       alt: "Multi-start clipped zeroth-order optimizer illustrated on a multimodal landscape"
       caption: "The multi-start clipped ZO optimizer. On a rugged objective, one-shot quasi-random multi-start places a handful of candidates, each step estimates a descent direction from a small set of black-box probes, and box-projected updates carry the surviving start to the global optimum while a poor start is stopped early."
-    - src: /images/papers/zoaf-circuits.png
-      kind: result
-      alt: "Schematics of a three-stage op-amp and a two-stage cascaded amplifier"
-      caption: "Benchmark schematics: (a) a three-stage op-amp and (b) the 22-parameter two-stage cascaded signal-conditioning amplifier."
-    - src: /images/papers/zoaf-convergence.png
-      kind: result
-      alt: "Best-so-far peaking versus number of simulator calls for ZOAF and six baselines"
-      caption: "Best-so-far peaking on the 22-parameter amplifier under a 100-call simulator budget, median over 100 random seeds. ZOAF (blue) separates from CMA-ES, TuRBO-1, DE, PSO, AutoCkt and DNN-Opt early and ends roughly an order of magnitude lower."
   faq:
     - q: "What problem does ZOAF solve?"
       a: "Optimizing analog and RF circuit parameters when the simulator is a black box, so gradients are unavailable and every evaluation is expensive."
@@ -47,6 +39,8 @@ paper:
       a: "Three distinct schematics, including a 22-parameter two-stage cascaded amplifier where ZOAF shows up to an order-of-magnitude advantage in median peaking. It needs no source code — the simulator is treated strictly as a black box mapping design parameters to a figure of merit."
     - q: "What comes next?"
       a: "Extending the framework toward uncertainty-aware design: stochastic zeroth-order optimization to handle process variations in nanoscale circuits, and distributionally robust circuit optimization that accounts for distribution shift in those variations."
+  abstract: >-
+    Circuit optimization is an indispensable step in analog/RF IC design. Classical fast gradient-based optimization methods are typically infeasible due to lack of access to simulator source code and the technical barriers to implementing adjoint methods. Therefore, surrogate-based black-box optimization is widely used in practice; however, it can be costly to build and sensitive to hyperparameters, whereas population heuristics often suffer from slow convergence and large evaluation counts under tight simulator-call budgets. To address these limitations, we propose the Zeroth-Order Analog/RF Framework (ZOAF), which recovers gradient-descent directions from a small number of black-box circuit simulations, combining the benefits of both gradient-based optimization and black-box optimization. We also employ several surrogate-free techniques to improve the efficiency and accuracy, including (1) a hybrid ZO scheduling method that switches between random-direction ZO for budget-efficient exploration and coordinate-wise ZO for accurate late-stage refinement, (2) one-shot quasi-random multi-start to focus evaluations, and (3) a sliding-window monitor that triggers early stops and box-projected updates to maintain feasibility. Evaluated on three distinct schematics, ZOAF consistently outperforms state-of-the-art baselines, achieving the best median final value on every reported figure of merit — with up to an order-of-magnitude advantage in median peaking on the 22-parameter two-stage amplifier — together with the most robust worst-case behavior across seeds, while reducing simulator calls to convergence by 1.3–3.8×.
   bibtex: |
     @article{tan2026zoaf,
       title   = {ZOAF: Towards Efficient Zeroth-Order Optimization for Analog/RF Circuit Design},
@@ -56,4 +50,14 @@ paper:
     }
 ---
 
-Circuit optimization is an indispensable step in analog/RF IC design. Classical fast gradient-based optimization methods are typically infeasible due to lack of access to simulator source code and the technical barriers to implementing adjoint methods. Therefore, surrogate-based black-box optimization is widely used in practice; however, it can be costly to build and sensitive to hyperparameters, whereas population heuristics often suffer from slow convergence and large evaluation counts under tight simulator-call budgets. To address these limitations, we propose the Zeroth-Order Analog/RF Framework (ZOAF), which recovers gradient-descent directions from a small number of black-box circuit simulations, combining the benefits of both gradient-based optimization and black-box optimization. We also employ several surrogate-free techniques to improve the efficiency and accuracy, including (1) a hybrid ZO scheduling method that switches between random-direction ZO for budget-efficient exploration and coordinate-wise ZO for accurate late-stage refinement, (2) one-shot quasi-random multi-start to focus evaluations, and (3) a sliding-window monitor that triggers early stops and box-projected updates to maintain feasibility. Evaluated on three distinct schematics, ZOAF consistently outperforms state-of-the-art baselines, achieving the best median final value on every reported figure of merit — with up to an order-of-magnitude advantage in median peaking on the 22-parameter two-stage amplifier — together with the most robust worst-case behavior across seeds, while reducing simulator calls to convergence by 1.3–3.8×.
+## Results
+
+<figure class="paper-fig">
+  <img src="{{ site.baseurl }}/images/papers/zoaf-circuits.png" alt="Schematics of a three-stage op-amp and a two-stage cascaded amplifier">
+  <figcaption>Benchmark schematics: (a) a three-stage op-amp and (b) the 22-parameter two-stage cascaded signal-conditioning amplifier.</figcaption>
+</figure>
+
+<figure class="paper-fig">
+  <img src="{{ site.baseurl }}/images/papers/zoaf-convergence.png" alt="Best-so-far peaking versus number of simulator calls for ZOAF and six baselines">
+  <figcaption>Best-so-far peaking on the 22-parameter amplifier under a 100-call simulator budget, median over 100 random seeds. ZOAF (blue) separates from CMA-ES, TuRBO-1, DE, PSO, AutoCkt and DNN-Opt early and ends roughly an order of magnitude lower.</figcaption>
+</figure>

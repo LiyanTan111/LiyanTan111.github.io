@@ -34,21 +34,13 @@ layout: default
     {% if p.result %}<div><h3>Main result</h3><p>{{ p.result }}</p></div>{% endif %}
   </div>
 
-  {% assign results = p.figures | where: "kind", "result" %}
-  {% if results.size > 0 %}
-  <h2>Results</h2>
-  {% for f in results %}
-  <figure class="paper-fig">
-    <img src="{{ site.baseurl }}{{ f.src }}" alt="{{ f.alt }}">
-    {% if f.caption %}<figcaption>{{ f.caption }}</figcaption>{% endif %}
-  </figure>
-  {% endfor %}
-  {% endif %}
+  {%- comment -%} 结果区：由页面正文自由撰写（图、并排图、表格都可以） {%- endcomment -%}
+  {{ content }}
 
-  {% if content != '' %}
+  {% if p.abstract %}
   <details class="paper-fold">
     <summary>Abstract</summary>
-    <div class="paper-fold__body" itemprop="abstract">{{ content }}</div>
+    <div class="paper-fold__body" itemprop="abstract"><p>{{ p.abstract }}</p></div>
   </details>
   {% endif %}
 
