@@ -418,3 +418,17 @@ a:hover { color: mix(#000, $accent, 22%); }
 .page__content .anchor::before { display: none; }
 .page__content h1 { scroll-margin-top: 2em; }
 .page__content .anchor { display: block; scroll-margin-top: 2em; }
+
+/* 论文页表格标题 */
+.paper-table caption {
+    caption-side: top;
+    text-align: left;
+    padding: 0 0 .6em;
+    font-size: .88em;
+    line-height: 1.45;
+    color: #5f666c;
+}
+/* 本身就窄的图不要拉到整行 */
+.paper-fig--narrow img { max-width: 620px; margin: 0 auto; }
+/* 表格里我们这一列加重 */
+.paper-table td.ours { font-weight: 700; color: $accent-deep; }

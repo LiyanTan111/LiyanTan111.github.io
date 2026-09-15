@@ -36,6 +36,19 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 ## Circuit Design Optimization
 {: .pub-group}
 
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">Under review</div><img src='{{ site.baseurl }}/images/zomcsgd.png' alt="ZO-MC-SGD" width="100%"></div></div>
+<div class='paper-box-text' markdown="1">
+
+[Sample-Efficient Yield Optimization of Analog Circuits via Stochastic Zeroth-Order Methods]({{ site.baseurl }}/papers/zo-mc-sgd/)
+
+**Liyan Tan**, Yequan Zhao, Ben F. Jamroz, Ari Feldman, Zheng Zhang
+
+<span class="paper-keywords">Analog yield optimization · Process variation · Stochastic zeroth-order optimization</span>
+
+<a class="project-link" href="{{ site.baseurl }}/papers/zo-mc-sgd/">Project page →</a>
+</div>
+</div>
+
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge">Under review</div><img src='{{ site.baseurl }}/images/zoaf.png' alt="ZOAF" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
