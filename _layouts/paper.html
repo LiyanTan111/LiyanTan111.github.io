@@ -1,0 +1,70 @@
+---
+layout: default
+---
+{% assign p = page.paper %}
+
+<article class="paper-page" itemscope itemtype="https://schema.org/ScholarlyArticle">
+
+  <div class="paper-page__venue">{{ p.venue }}</div>
+  <h1 class="paper-page__title" itemprop="headline">{{ page.title }}</h1>
+
+  <p class="paper-page__authors">
+    {% for a in p.authors %}{% if forloop.index > 1 %}, {% endif %}{% if a == "Liyan Tan" %}<strong>{{ a }}</strong>{% else %}{{ a }}{% endif %}{% endfor %}
+  </p>
+
+  <p class="paper-page__links">
+    {% if p.arxiv %}<a class="paper-btn" href="https://arxiv.org/abs/{{ p.arxiv }}">arXiv</a>{% endif %}
+    {% if p.arxiv %}<a class="paper-btn" href="https://arxiv.org/pdf/{{ p.arxiv }}">PDF</a>{% endif %}
+    {% if p.code %}<a class="paper-btn" href="{{ p.code }}">Code</a>{% endif %}
+    <a class="paper-btn" href="#bibtex">BibTeX</a>
+  </p>
+
+  {% if p.tldr %}<p class="paper-tldr">{{ p.tldr }}</p>{% endif %}
+
+  {% for f in p.figures %}{% if f.kind == 'method' %}
+  <figure class="paper-fig">
+    <img src="{{ site.baseurl }}{{ f.src }}" alt="{{ f.alt }}">
+    {% if f.caption %}<figcaption>{{ f.caption }}</figcaption>{% endif %}
+  </figure>
+  {% endif %}{% endfor %}
+
+  <div class="paper-pmr">
+    {% if p.problem %}<div><h3>Problem</h3><p>{{ p.problem }}</p></div>{% endif %}
+    {% if p.method %}<div><h3>Method</h3><p>{{ p.method }}</p></div>{% endif %}
+    {% if p.result %}<div><h3>Main result</h3><p>{{ p.result }}</p></div>{% endif %}
+  </div>
+
+  {% assign results = p.figures | where: "kind", "result" %}
+  {% if results.size > 0 %}
+  <h2>Results</h2>
+  {% for f in results %}
+  <figure class="paper-fig">
+    <img src="{{ site.baseurl }}{{ f.src }}" alt="{{ f.alt }}">
+    {% if f.caption %}<figcaption>{{ f.caption }}</figcaption>{% endif %}
+  </figure>
+  {% endfor %}
+  {% endif %}
+
+  {% if content != '' %}
+  <details class="paper-fold">
+    <summary>Abstract</summary>
+    <div class="paper-fold__body" itemprop="abstract">{{ content }}</div>
+  </details>
+  {% endif %}
+
+  {% if p.faq.size > 0 %}
+  <h2>Frequently asked questions</h2>
+  {% for f in p.faq %}
+  <details class="paper-fold">
+    <summary>{{ f.q }}</summary>
+    <div class="paper-fold__body"><p>{{ f.a }}</p></div>
+  </details>
+  {% endfor %}
+  {% endif %}
+
+  {% if p.bibtex %}
+  <h2 id="bibtex">Cite this work</h2>
+  <pre class="paper-bibtex"><code>{{ p.bibtex | strip }}</code></pre>
+  {% endif %}
+
+</article>

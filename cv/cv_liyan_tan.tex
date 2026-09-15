@@ -1,0 +1,162 @@
+%==============================================================
+%  Liyan Tan — Curriculum Vitae
+%  Compile with:  pdflatex cv_liyan_tan.tex
+%==============================================================
+\documentclass[10pt,letterpaper]{article}
+
+\usepackage[top=1.15cm,bottom=1.15cm,left=1.5cm,right=1.5cm,footskip=0.6cm]{geometry}
+\usepackage{charter}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage[letterspace=90]{microtype}
+\usepackage{textcomp}
+\usepackage{needspace}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{ink}{RGB}{26,26,26}          % 正文
+\definecolor{navy}{RGB}{31,58,95}         % 姓名 + 顶部粗线
+\definecolor{accent}{RGB}{10,102,114}     % 深青：小标题 + 分隔线
+\definecolor{muted}{RGB}{95,102,108}      % 日期、联系方式
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\tabcolsep}{0pt}
+\color{ink}
+\linespread{1.06}\selectfont
+
+% ---------- 小标题：加宽字距的小型大写 + 下方细线 ----------
+\newcommand{\cvsection}[1]{%
+  \vspace{0.95em}%
+  \noindent{\large\bfseries\color{accent}\textls[110]{\textsc{#1}}}\par
+  \vspace{0.12em}%
+  {\color{accent}\hrule height 0.7pt}%
+  \vspace{0.55em}%
+}
+
+% ---------- 左侧内容 + 右侧日期 ----------
+\newcommand{\entry}[2]{%
+  \noindent\begin{tabularx}{\textwidth}{@{}X@{\hspace{1.4em}}r@{}}
+    #1 & {\color{muted}#2}
+  \end{tabularx}\par
+}
+
+\newlist{cvitems}{itemize}{1}
+\setlist[cvitems]{label=\textbullet, leftmargin=1.1em, labelsep=0.4em,
+                  topsep=0.28em, itemsep=0.22em, parsep=0pt, partopsep=0pt}
+
+\newcommand{\pub}[2]{%
+  \vspace{0.55em}
+  \noindent\textbf{#1}\par
+  \noindent#2\par
+}
+
+\newcommand{\me}{\textbf{Liyan Tan}}
+\newcommand{\paperlink}[1]{\,{\small\color{accent}\href{#1}{[paper]}}}
+
+\begin{document}
+
+%================= HEADER =================
+\noindent{\fontsize{22}{24}\selectfont\bfseries\color{navy} Liyan Tan}\hfill
+{\small\color{muted}
+  +1 (805) 259-0248 \ \textperiodcentered\ \href{mailto:liyan_tan@ucsb.edu}{liyan\_tan@ucsb.edu}
+  % 网站上线后取消下面一行的注释：
+  % \ \textperiodcentered\ \href{https://liyantan.github.io}{liyantan.github.io}
+  % \ \textperiodcentered\ \href{https://scholar.google.com/citations?user=xBvnXWsAAAAJ}{Google Scholar}
+}
+
+\vspace{0.42em}
+{\color{navy}\hrule height 1.6pt}
+\vspace{0.5em}
+
+\noindent Zeroth-order and memory-efficient optimization for large language model fine-tuning and analog/RF circuit design.
+
+%================= EDUCATION =================
+\cvsection{Education}
+
+{\small
+\entry{\textbf{University of California, Santa Barbara}, \textit{Ph.D. in Computer Engineering} \textbar{} CA, USA}{Spring 2025 - Expected 2028}
+\entry{\textbf{University of California, Santa Barbara}, \textit{M.S. in Computer Engineering} \textbar{} CA, USA}{Fall 2023 - Winter 2025}
+\entry{\textbf{University of California, Santa Barbara}, \textit{Extension Program in ECE} \textbar{} CA, USA}{Fall 2022 - Spring 2023}
+\entry{\textbf{Huazhong University of Science \& Technology}, \textit{B.S. in Electronic Information Engineering} \textbar{} China}{Fall 2019 - Summer 2023}
+}
+
+%================= INDUSTRIAL EXPERIENCE =================
+\cvsection{Industrial Experience}
+
+\entry{\textbf{Cadence Design Systems,} \textit{Software Architect Intern} \textbar{} Austin, TX}{Jun 2025 - Sep 2025}
+\begin{cvitems}
+  \item Architected an LLM copilot agent for Voltus, Cadence's power-integrity signoff solver, turning natural-language design intent into verified command invocations, GUI actions, and automated root-cause analysis over signoff reports.
+  \item Enabled on-premise deployment under enterprise data constraints through retrieval over EDA documentation, parameter-efficient fine-tuning, and distillation of a large teacher into a compact local model.
+\end{cvitems}
+
+%================= PUBLICATIONS =================
+\cvsection{Selected Publications}
+
+\pub{GRZO: Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning\paperlink{https://arxiv.org/abs/2606.02857}}
+{\me, Yequan Zhao, Yifan Yang, Ruijie Zhang, Xinling Yu, Zheng Zhang, \textit{Findings of the Association for Computational Linguistics: EMNLP}, 2026.}
+
+\pub{ZOAF: Towards Efficient Zeroth-Order Optimization for Analog/RF Circuit Design\paperlink{https://arxiv.org/abs/2606.02869}}
+{\me, Yequan Zhao, Jinming Lu, Ben F. Jamroz, Ari Feldman, Zheng Zhang, under review at \textit{IEEE TCAD}, arXiv:2606.02869, 2026.}
+
+\pub{IAPO: Input Attribution-Aware Policy Optimization for Tool Use in Small Multimodal Agents\paperlink{https://arxiv.org/abs/2606.11652}}
+{Yifan Yang, Zhen Zhang, Jiayi Tian, \me, Zheng Zhang, \textit{arXiv preprint arXiv:2606.11652}, 2026.}
+
+\pub{FuRA: Full-Rank Parameter-Efficient Fine-Tuning with Spectral Preconditioning\paperlink{https://arxiv.org/abs/2605.22869}}
+{Yequan Zhao, Ruijie Zhang, \me, Niall Moran, Tong Qin, Zheng Zhang, \textit{arXiv preprint arXiv:2605.22869}, 2026.}
+
+\pub{MUON+: Towards More Effective Muon via One Additional Normalization Step for LLM Pre-training\paperlink{https://arxiv.org/abs/2602.21545}}
+{Ruijie Zhang, Yequan Zhao, Ziyue Liu, Zhengyang Wang, Yupeng Su, \me, Zheng Zhang, \textit{arXiv preprint arXiv:2602.21545}, 2026.}
+
+\pub{Overview and Idea of the Mars UAV Experimental Platform Development\paperlink{https://scholar.google.com/citations?view_op=view_citation&hl=en&user=xBvnXWsAAAAJ&citation_for_view=xBvnXWsAAAAJ:UeHWp8X0CEIC}}
+{\me, Yijun Mao, \textit{Advances in Aeronautical Science and Engineering}, 15(2):1-10, 2024.}
+
+%================= RESEARCH PROJECTS =================
+\cvsection{Research Projects}
+
+\needspace{5\baselineskip}
+\entry{\textbf{Variance-Reduced Zeroth-Order Optimization for LLM Fine-Tuning} \textbar{} Advisor: Zheng Zhang}{Mar 2025 - Present}
+\begin{cvitems}
+  \item Proposed GRZO, a group-relative zeroth-order optimizer that assigns a pseudo-independent perturbation to every mini-batch example, raising the effective gradient-direction count from one to the batch size at no additional forward cost.
+  \item Proved directional unbiasedness with variance shrinking proportionally to the batch size; at the same inference-level memory footprint and comparable wall-clock cost, improved Llama3-8B average accuracy by $+3.0$ over MeZO and lifted sparse, low-rank, and quantized ZO variants by $+4.9$ on average.
+\end{cvitems}
+
+\vspace{0.6em}
+\needspace{5\baselineskip}
+\entry{\textbf{Zeroth-Order Optimization for Analog/RF Circuit Design} \textbar{} Advisor: Zheng Zhang, with NIST}{Jan 2025 - Present}
+\begin{cvitems}
+  \item Proposed ZOAF, a surrogate-free framework recovering gradient-descent directions from a small number of black-box circuit simulations, with a hybrid schedule from random-direction exploration to coordinate-wise refinement, quasi-random multi-start, and a sliding-window monitor for early stopping and feasibility.
+  \item Achieved the best median figure of merit on all three benchmark schematics, with up to an order-of-magnitude advantage in median peaking on a 22-parameter amplifier and $1.3$-$3.8\times$ fewer simulator calls to convergence.
+  \item Extending the framework toward uncertainty-aware design: stochastic zeroth-order optimization to handle process variations in nanoscale circuits, and distributionally robust circuit optimization that accounts for distribution shift in those variations.
+\end{cvitems}
+
+\vspace{0.6em}
+\needspace{5\baselineskip}
+\entry{\textbf{Tensor-Train Compressed NN via Temporal Logic} \textbar{} Advisors: Zheng Zhang, Tim Sherwood}{Apr 2024 - Jan 2025}
+\begin{cvitems}
+  \item Implemented tensor-train compressed neural networks on temporal-logic hardware using delay-space values and approximated arithmetic, reducing parameter count by $115\times$ at 2.21\% (exact) and 4.72\% (approximated) accuracy loss.
+  \item Cut latency by $14.28\times$ and energy by $32.37\times$ on a $4\times4$ PE array under race-logic hardware settings.
+\end{cvitems}
+
+\vspace{0.6em}
+\needspace{5\baselineskip}
+\entry{\textbf{Mars UAV Aerodynamic Performance Experimental Platform} \textbar{} Advisor: Yijun Mao, HUST}{Jan 2021 - Sep 2022}
+\begin{cvitems}
+  \item Surveyed two decades of Mars UAV experimental platforms and summarized their design trade-offs; the resulting review was published in \textit{Advances in Aeronautical Science and Engineering}.
+  \item Built a hover-efficiency test platform with an axially distributed model, measuring rotational speed, torque, lift, and induced velocity of the rotor blades.
+\end{cvitems}
+
+%================= TEACHING =================
+\cvsection{Teaching}
+
+\noindent\textbf{Teaching Assistant, UC Santa Barbara:} PHYS 127BL Digital Electronics; PHYS 127AL Analog Electronics; PHYS 6BL Introductory Physics; ECE 15A Fundamentals of Logic Design; PSTAT 5A Understanding Data.
+
+%================= HONORS =================
+\cvsection{Honors}
+
+\entry{\textbf{Honours Degree for Undergraduates}, Huazhong University of Science and Technology}{Jun 2023}
+
+\end{document}

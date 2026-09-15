@@ -1,0 +1,26 @@
+# 依赖与构建产物
+node_modules/
+_site/
+.jekyll-cache/
+.sass-cache/
+.bundle/
+vendor/
+dist/
+.astro/
+
+# macOS
+.DS_Store
+
+# 桌面端回传的中间文件
+Claude outputs/
+
+# 本地素材与草稿（不进公开仓库）
+photo.jpg
+paper-sources/
+PLAN.md
+docs/
+
+# LaTeX 编译中间文件
+cv/*.aux
+cv/*.log
+cv/*.out
