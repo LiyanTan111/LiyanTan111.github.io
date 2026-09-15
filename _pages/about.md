@@ -41,6 +41,8 @@ You can find more details on <a href='https://scholar.google.com/citations?user=
 **Liyan Tan**, Yequan Zhao, Jinming Lu, Ben F. Jamroz, Ari Feldman, Zheng Zhang
 
 <span class="paper-keywords">Analog/RF circuit sizing · Simulation-Efficient Optimization</span>
+
+<a class="project-link" href="{{ site.baseurl }}/papers/zoaf/">Project page →</a>
 </div>
 </div>
 
@@ -54,6 +56,8 @@ You can find more details on <a href='https://scholar.google.com/citations?user=
 **Liyan Tan**, Yequan Zhao, Yifan Yang, Ruijie Zhang, Xinling Yu, Zheng Zhang
 
 <span class="paper-keywords">LLM fine-tuning · Zeroth-order optimization · Variance reduction</span>
+
+<a class="project-link" href="{{ site.baseurl }}/papers/grzo/">Project page →</a>
 </div>
 </div>
 

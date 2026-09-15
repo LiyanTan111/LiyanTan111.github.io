@@ -56,9 +56,12 @@
         width: 100%;
         order: 2;
         img {
+            display: block;             /* 角标独占一行，不会挤到图旁边 */
             max-width: 400px;
+            max-height: 175px;          /* 高瘦的图不至于比别的卡片大一圈 */
+            width: auto;
             box-shadow: 3px 3px 6px #888;
-            object-fit: cover;
+            object-fit: contain;
         }
     }
     
@@ -353,3 +356,20 @@ a:hover { color: mix(#000, $accent, 22%); }
 
 .dpos { color: #1a7f4b; font-size: .9em; }
 .dneg { color: #b03a2e; font-size: .9em; }
+
+
+/* 三图并排 */
+.fig-row--3 > div { flex: 1 1 180px; }
+
+/* 首页：一作论文的项目页入口 */
+.project-link {
+    display: inline-block;
+    margin-top: .55em;
+    padding: .12em .7em;
+    font-size: .8em;
+    border: 1px solid #0a6672;
+    border-radius: 3px;
+    color: #0a6672 !important;
+    text-decoration: none !important;
+}
+.project-link:hover { background: #0a6672; color: #fff !important; }

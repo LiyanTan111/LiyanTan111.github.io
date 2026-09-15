@@ -17,6 +17,7 @@ paper:
   date: "2026-06-01"
   arxiv: "2606.02869"
   doi: "10.48550/arXiv.2606.02869"
+  code: "https://github.com/LiyanTan111/ZOAF"
   tldr: "Analog/RF circuit optimizers usually have to choose between expensive surrogate models and slow evolutionary search. ZOAF instead recovers descent directions straight from a handful of black-box simulations, reaching convergence with 1.3–3.8× fewer simulator calls."
   problem: "Analog/RF simulators are closed black boxes, so no gradient is available. Surrogate models are costly to fit and hyperparameter-sensitive; population heuristics burn through the simulator budget before converging."
   method: "ZOAF recovers descent directions from a handful of simulations — no surrogate. A hybrid schedule switches from random-direction exploration to coordinate-wise refinement, one-shot quasi-random multi-start concentrates the budget, and a sliding-window monitor handles early stopping and keeps designs feasible."
@@ -52,12 +53,9 @@ paper:
 
 ## Results
 
-<figure class="paper-fig">
-  <img src="{{ site.baseurl }}/images/papers/zoaf-circuits.png" alt="Schematics of a three-stage op-amp and a two-stage cascaded amplifier">
-  <figcaption>Benchmark schematics: (a) a three-stage op-amp and (b) the 22-parameter two-stage cascaded signal-conditioning amplifier.</figcaption>
-</figure>
-
-<figure class="paper-fig">
-  <img src="{{ site.baseurl }}/images/papers/zoaf-convergence.png" alt="Best-so-far peaking versus number of simulator calls for ZOAF and six baselines">
-  <figcaption>Best-so-far peaking on the 22-parameter amplifier under a 100-call simulator budget, median over 100 random seeds. ZOAF (blue) separates from CMA-ES, TuRBO-1, DE, PSO, AutoCkt and DNN-Opt early and ends roughly an order of magnitude lower.</figcaption>
-</figure>
+<div class="fig-row fig-row--3">
+  <div><img src="{{ site.baseurl }}/images/papers/zoaf-peaking.png" alt="Best-so-far peaking versus simulator calls"></div>
+  <div><img src="{{ site.baseurl }}/images/papers/zoaf-ripple.png" alt="Best-so-far ripple versus simulator calls"></div>
+  <div><img src="{{ site.baseurl }}/images/papers/zoaf-overshoot.png" alt="Best-so-far overshoot versus simulator calls"></div>
+</div>
+<p class="fig-caption">Best-so-far convergence on the 22-parameter two-stage cascaded amplifier under a 100-call simulator budget, aggregated over 100 random seeds — peaking, ripple and overshoot. Solid lines are the median across seeds, shaded bands the inter-quartile range, dotted lines the 10th and 90th percentiles. ZOAF (blue, bold) separates from CMA-ES, TuRBO-1, DE, PSO, AutoCkt and DNN-Opt early and holds the lead on every figure of merit.</p>
