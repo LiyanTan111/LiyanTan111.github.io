@@ -40,7 +40,7 @@ You can find more details on <a href='https://scholar.google.com/citations?user=
 
 **Liyan Tan**, Yequan Zhao, Jinming Lu, Ben F. Jamroz, Ari Feldman, Zheng Zhang
 
-<span class="paper-keywords">Analog/RF circuit sizing · Surrogate-free zeroth-order optimization · Black-box simulators</span>
+<span class="paper-keywords">Analog/RF circuit sizing · Surrogate-free zeroth-order optimization</span>
 </div>
 </div>
 
@@ -53,10 +53,39 @@ You can find more details on <a href='https://scholar.google.com/citations?user=
 
 **Liyan Tan**, Yequan Zhao, Yifan Yang, Ruijie Zhang, Xinling Yu, Zheng Zhang
 
-<span class="paper-keywords">LLM fine-tuning · Zeroth-order optimization · Variance reduction · Inference-level memory</span>
+<span class="paper-keywords">LLM fine-tuning · Zeroth-order optimization · Variance reduction</span>
 </div>
 </div>
 
-- [IAPO: Input Attribution-Aware Policy Optimization for Tool Use in Small Multimodal Agents](https://arxiv.org/abs/2606.11652), Yifan Yang, Zhen Zhang, Jiayi Tian, **Liyan Tan**, Zheng Zhang, **arXiv 2026**
-- [FuRA: Full-Rank Parameter-Efficient Fine-Tuning with Spectral Preconditioning](https://arxiv.org/abs/2605.22869), Yequan Zhao, Ruijie Zhang, **Liyan Tan**, Niall Moran, Tong Qin, Zheng Zhang, **arXiv 2026**
-- [MUON+: Towards More Effective Muon via One Additional Normalization Step for LLM Pre-training](https://arxiv.org/abs/2602.21545), Ruijie Zhang, Yequan Zhao, Ziyue Liu, Zhengyang Wang, Yupeng Su, **Liyan Tan**, Zheng Zhang, **arXiv 2026**
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">arXiv 2026</div><img src='{{ site.baseurl }}/images/iapo.png' alt="IAPO" width="100%"></div></div>
+<div class='paper-box-text' markdown="1">
+
+[IAPO: Input Attribution-Aware Policy Optimization for Tool Use in Small Multimodal Agents](https://arxiv.org/abs/2606.11652)
+
+Yifan Yang, Zhen Zhang, Jiayi Tian, **Liyan Tan**, Zheng Zhang
+
+<span class="paper-keywords">Multimodal agents · Tool use · Policy optimization</span>
+</div>
+</div>
+
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">arXiv 2026</div><img src='{{ site.baseurl }}/images/fura.png' alt="FuRA" width="100%"></div></div>
+<div class='paper-box-text' markdown="1">
+
+[FuRA: Full-Rank Parameter-Efficient Fine-Tuning with Spectral Preconditioning](https://arxiv.org/abs/2605.22869)
+
+Yequan Zhao, Ruijie Zhang, **Liyan Tan**, Niall Moran, Tong Qin, Zheng Zhang
+
+<span class="paper-keywords">Parameter-efficient fine-tuning · Full-rank adaptation · Spectral preconditioning</span>
+</div>
+</div>
+
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge">arXiv 2026</div><img src='{{ site.baseurl }}/images/muon.png' alt="MUON+" width="100%"></div></div>
+<div class='paper-box-text' markdown="1">
+
+[MUON+: Towards More Effective Muon via One Additional Normalization Step for LLM Pre-training](https://arxiv.org/abs/2602.21545)
+
+Ruijie Zhang, Yequan Zhao, Ziyue Liu, Zhengyang Wang, Yupeng Su, **Liyan Tan**, Zheng Zhang
+
+<span class="paper-keywords">LLM pre-training · Optimizer design · Update normalization</span>
+</div>
+</div>
