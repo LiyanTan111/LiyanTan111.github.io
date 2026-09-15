@@ -55,6 +55,7 @@
         display: flex;
         width: 100%;
         order: 2;
+        > div { width: 100%; }   /* 角标贴列左边缘，各卡片对齐；图片自己居中 */
         img {
             display: block;             /* 角标独占一行，不会挤到图旁边 */
             max-width: 400px;
