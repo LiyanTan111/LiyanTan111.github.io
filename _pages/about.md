@@ -40,7 +40,7 @@ You can find more details on <a href='https://scholar.google.com/citations?user=
 
 **Liyan Tan**, Yequan Zhao, Jinming Lu, Ben F. Jamroz, Ari Feldman, Zheng Zhang
 
-<span class="paper-keywords">Analog/RF circuit sizing · Surrogate-free zeroth-order optimization</span>
+<span class="paper-keywords">Analog/RF circuit sizing · Simulation-Efficient Optimization</span>
 </div>
 </div>
 
@@ -64,7 +64,7 @@ You can find more details on <a href='https://scholar.google.com/citations?user=
 
 Yifan Yang, Zhen Zhang, Jiayi Tian, **Liyan Tan**, Zheng Zhang
 
-<span class="paper-keywords">Multimodal agents · Tool use · Policy optimization</span>
+<span class="paper-keywords">Multimodal Tool Use · Input Attribution · Policy Optimization</span>
 </div>
 </div>
 
@@ -75,7 +75,7 @@ Yifan Yang, Zhen Zhang, Jiayi Tian, **Liyan Tan**, Zheng Zhang
 
 Yequan Zhao, Ruijie Zhang, **Liyan Tan**, Niall Moran, Tong Qin, Zheng Zhang
 
-<span class="paper-keywords">Parameter-efficient fine-tuning · Full-rank adaptation · Spectral preconditioning</span>
+<span class="paper-keywords">PEFT · Full-rank adaptation · Spectral preconditioning</span>
 </div>
 </div>
 
@@ -86,6 +86,6 @@ Yequan Zhao, Ruijie Zhang, **Liyan Tan**, Niall Moran, Tong Qin, Zheng Zhang
 
 Ruijie Zhang, Yequan Zhao, Ziyue Liu, Zhengyang Wang, Yupeng Su, **Liyan Tan**, Zheng Zhang
 
-<span class="paper-keywords">LLM pre-training · Optimizer design · Update normalization</span>
+<span class="paper-keywords">LLM pre-training · Muon · Normalization</span>
 </div>
 </div>
