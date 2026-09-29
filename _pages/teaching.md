@@ -4,13 +4,14 @@ title: "Teaching"
 author_profile: true
 ---
 
-# 👨‍🏫 Teaching
+# Teaching
 
 Teaching assistant at UC Santa Barbara, across the Physics, ECE and Statistics
 departments — mostly hands-on lab courses in electronics.
 
 | Term | Course | Department |
 | :--- | :--- | :--- |
+| Fall 2026 | ECE 3 — Introduction to Python Programming for Engineers | Electrical & Computer Engineering |
 | Winter 2025 | PSTAT 5A — Understanding Data | Statistics & Applied Probability |
 | Fall 2024 | ECE 15A — Fundamentals of Logic Design | Electrical & Computer Engineering |
 | Summer 2024 | PHYS 6BL — Introductory Physics Laboratory | Physics |

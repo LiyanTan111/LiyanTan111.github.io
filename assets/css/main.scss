@@ -108,14 +108,14 @@ h1:before, .anchor:before {
     padding: .2em 1rem;
     margin-bottom: .7em;
     color: white;
-    background-color: #00369f;
+    background-color: #41628f;
     font-size: .8em;
     border-radius: 2px;
 }
 
 
 /* ===================== 论文项目页 ===================== */
-$paper-accent: #00369f;
+$paper-accent: #41628f;
 
 .paper-page {
     max-width: 52em;
@@ -239,8 +239,8 @@ $paper-accent: #00369f;
 
 /* ===================== 个人风格覆盖 ===================== */
 /* 主色从模版默认的 #224b8d 换成和简历一致的深青，并改写小标题样式 */
-$accent: #0a6672;
-$accent-deep: #1f3a5f;
+$accent: #41628f;
+$accent-deep: #2b3f5c;
 
 a { color: $accent; }
 a:hover { color: mix(#000, $accent, 22%); }
@@ -270,7 +270,7 @@ a:hover { color: mix(#000, $accent, 22%); }
 
 /* 论文角标、按钮统一用主色 */
 .badge, .paper-page__venue { background-color: $accent-deep; }
-.paper-tldr { border-left-color: $accent; background: #eef5f6; }
+.paper-tldr { border-left-color: $accent; background: #eef3f9; }
 .paper-pmr h3 { color: $accent; }
 .paper-fold > summary::before { color: $accent; }
 .paper-btn:hover { border-color: $accent; color: $accent; }
@@ -346,7 +346,7 @@ a:hover { color: mix(#000, $accent, 22%); }
     }
 
     /* 我们的方法 */
-    .ours td { background: #eef5f6; font-weight: 600; }
+    .ours td { background: #eef3f9; font-weight: 600; }
 
     /* 一阶方法标记 */
     .fo td:first-child::before {
@@ -370,12 +370,12 @@ a:hover { color: mix(#000, $accent, 22%); }
     margin-top: .55em;
     padding: .12em .7em;
     font-size: .8em;
-    border: 1px solid #0a6672;
+    border: 1px solid #41628f;
     border-radius: 3px;
-    color: #0a6672 !important;
+    color: #41628f !important;
     text-decoration: none !important;
 }
-.project-link:hover { background: #0a6672; color: #fff !important; }
+.project-link:hover { background: #41628f; color: #fff !important; }
 
 
 /* ---------- 侧栏 bio：两行，各带一个圆点 ---------- */
@@ -402,7 +402,7 @@ a:hover { color: mix(#000, $accent, 22%); }
     letter-spacing: .07em;
     text-transform: uppercase;
     color: $accent-deep;
-    background: linear-gradient(to right, #e7f1f2 0%, #f3f8f9 55%, rgba(243, 248, 249, 0) 100%);
+    background: linear-gradient(to right, #e9eff7 0%, #f3f6fb 55%, rgba(243, 248, 249, 0) 100%);
     border-left: 4px solid $accent;
     border-radius: 2px;
 }

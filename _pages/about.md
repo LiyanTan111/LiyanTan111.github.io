@@ -34,7 +34,7 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 # Publications
 
 ## Circuit Design Optimization
-{: .pub-group}
+{: .pub-group .pub-group--circuit}
 
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--review">Under review</div><img src='{{ site.baseurl }}/images/zomcsgd.png' alt="ZO-MC-SGD" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
@@ -63,7 +63,7 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 </div>
 
 ## Machine Learning Optimization
-{: .pub-group}
+{: .pub-group .pub-group--ml}
 
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--accepted">EMNLP 2026</div><img src='{{ site.baseurl }}/images/grzo.png' alt="GRZO" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">

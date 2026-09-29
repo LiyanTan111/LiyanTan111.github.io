@@ -7,14 +7,16 @@ $ink:        #1d2327;
 $text:       #3d444b;
 $muted:      #6b737b;
 $faint:      #9aa1a8;
-$line:       #e6e8eb;
-$line-soft:  #f0f1f3;
-$paper:      #fafaf8;
-$accent:     #0a6672;
-$accent-deep:#1f3a5f;
-$accent-soft:#e7f0f1;
-$sand:       #f4efe4;
-$sand-ink:   #7a6843;
+$line:       #e6e8ec;
+$line-soft:  #f0f1f4;
+$paper:      #fafafb;
+/* 主色：低饱和的蓝；辅色：低饱和的红（砖玫瑰） */
+$accent:     #41628f;
+$accent-deep:#2b3f5c;
+$accent-soft:#eaf0f7;
+$rose:       #a9545b;
+$rose-deep:  #7c3a40;
+$rose-soft:  #f7ebec;
 $radius:     14px;
 $shadow-soft: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px rgba(16, 24, 40, .05);
 
@@ -33,7 +35,7 @@ body {
     a:not(.pill-btn):not(.paper-btn):not(.paper-page__back) {
         color: $accent;
         text-decoration: underline;
-        text-decoration-color: rgba(10, 102, 114, .3);
+        text-decoration-color: rgba(65, 98, 143, .3);
         text-decoration-thickness: 1px;
         text-underline-offset: 3px;
         transition: color .15s, text-decoration-color .15s;
@@ -69,7 +71,7 @@ body {
 
 /* ---------- 顶栏 ---------- */
 .masthead {
-    background: rgba(250, 250, 248, .86);
+    background: rgba(250, 250, 251, .86);
     -webkit-backdrop-filter: saturate(160%) blur(10px);
     backdrop-filter: saturate(160%) blur(10px);
     border-bottom: 1px solid $line;
@@ -122,7 +124,7 @@ body {
     padding: .55em .95em;
     border-left: 3px solid $accent;
     border-radius: 0 10px 10px 0;
-    background: linear-gradient(to right, #e9f1f2 0%, #f3f7f7 60%, rgba(243, 247, 247, 0) 100%);
+    background: linear-gradient(to right, #e9eff7 0%, #f3f6fb 60%, rgba(243, 246, 251, 0) 100%);
 }
 
 /* ---------- 论文卡片 ---------- */
@@ -154,7 +156,7 @@ body {
             font-weight: 600;
             line-height: 1.45;
             text-decoration: none !important;
-            &:hover { color: $accent !important; text-decoration: underline !important; text-decoration-color: rgba(10,102,114,.35) !important; }
+            &:hover { color: $accent !important; text-decoration: underline !important; text-decoration-color: rgba(65,98,143,.35) !important; }
         }
         > p:nth-child(2) { color: $muted; font-size: .94em; }
     }
@@ -173,8 +175,8 @@ body {
     background: #eef0f2;
     color: #4f5963;
 }
-.badge--accepted { background: $accent-soft; color: $accent; box-shadow: inset 0 0 0 1px rgba(10, 102, 114, .16); }
-.badge--review   { background: $sand; color: $sand-ink; box-shadow: inset 0 0 0 1px rgba(122, 104, 67, .14); }
+.badge--accepted { background: $accent-soft; color: $accent; box-shadow: inset 0 0 0 1px rgba(65, 98, 143, .16); }
+.badge--review   { background: $rose-soft; color: $rose-deep; box-shadow: inset 0 0 0 1px rgba(169, 84, 91, .16); }
 .badge--preprint { background: #eff1f4; color: #55606b; box-shadow: inset 0 0 0 1px rgba(85, 96, 107, .1); }
 
 /* Project page / Code 按钮 */
@@ -235,7 +237,7 @@ body {
         border-radius: 999px;
         background: $accent-soft !important;
         color: $accent;
-        box-shadow: inset 0 0 0 1px rgba(10, 102, 114, .16);
+        box-shadow: inset 0 0 0 1px rgba(65, 98, 143, .16);
     }
 
     &__title {
@@ -285,9 +287,9 @@ body {
 .paper-tldr {
     margin: 0 0 2.4em;
     padding: 1.25em 1.45em;
-    background: #f2f6f6;
-    border: 1px solid #e1eaea;
-    border-left: 1px solid #e1eaea !important;
+    background: #f3f6fb;
+    border: 1px solid #e0e7f1;
+    border-left: 1px solid #e0e7f1 !important;
     border-radius: $radius;
 
     &__label {
@@ -347,7 +349,7 @@ body {
             font-size: 2.1em;
             font-weight: 500;
             letter-spacing: 0;
-            color: rgba(10, 102, 114, .45);
+            color: rgba(65, 98, 143, .45);
         }
     }
     p { margin: 0 !important; line-height: 1.72; }
@@ -483,3 +485,61 @@ h3.author__name {
 .paper-box .paper-box-image { box-sizing: border-box; }
 .paper-box .paper-box-image > div { max-width: 100%; }
 .paper-box .paper-box-image img { max-width: 100% !important; }
+
+
+/* ==========================================================================
+   红蓝点缀：蓝为主、红为辅，都压低饱和
+   ========================================================================== */
+/* 大标题下的短色条、侧栏姓名下的色条：蓝 → 红 */
+.page__content h1::after { background: linear-gradient(90deg, $accent 0 62%, $rose 62% 100%); }
+.author__name { border-bottom: 0 !important; position: relative; padding-bottom: .4em; }
+.author__name::after {
+    content: '';
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, $accent 0 62%, $rose 62% 100%);
+}
+.author__bio .bio-line::before { color: $rose; }
+
+/* 两个论文分组：电路 = 红，机器学习 = 蓝 */
+.page__content h2.pub-group--circuit {
+    color: $rose-deep;
+    border-left-color: $rose;
+    background: linear-gradient(to right, #f6eaeb 0%, #faf3f3 60%, rgba(250, 243, 243, 0) 100%);
+}
+.page__content h2.pub-group--ml {
+    color: $accent-deep;
+    border-left-color: $accent;
+    background: linear-gradient(to right, #e9eff7 0%, #f3f6fb 60%, rgba(243, 246, 251, 0) 100%);
+}
+
+/* 卡片悬停边框带一点蓝 */
+.paper-box:hover { border-color: rgba(65, 98, 143, .28); }
+
+/* 项目页：整体蓝白底，卡片保持白色 */
+body:has(.paper-page) { background: #f5f8fc; }
+body:has(.paper-page) .masthead { background: rgba(245, 248, 252, .86); }
+
+/* 页面较短时，底部也铺满同一底色 */
+html { background: $paper; }
+html:has(.paper-page) { background: #f5f8fc; }
+
+/* 普通表格（Teaching 等）：和论文页表格同一风格 */
+.page__content > table {
+    display: table;
+    width: 100%;
+    border: 1px solid $line;
+    border-radius: 12px;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    background: #fff;
+    font-size: .92em;
+
+    th { background: #f5f7fa; color: $ink; font-weight: 600; border-bottom: 1px solid $line; padding: .7em 1em; }
+    td { border-bottom: 1px solid $line-soft; padding: .7em 1em; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: #f8fafc; }
+    td:first-child { color: $muted; font-variant-numeric: tabular-nums; white-space: nowrap; }
+}
