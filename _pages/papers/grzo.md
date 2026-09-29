@@ -17,6 +17,7 @@ paper:
   date: "2026-06-01"
   arxiv: "2606.02857"
   doi: "10.48550/arXiv.2606.02857"
+  code: "https://github.com/LiyanTan111/GRZO-public"
   tldr: "One perturbation per example instead of one per batch. GRZO raises the number of zeroth-order gradient directions from one to the batch size at no extra forward cost, beating MeZO by +3.0 average accuracy while staying within 0.5% of the forward-only inference memory floor. It is a drop-in replacement for MeZO and composes with its sparse, low-rank and quantized variants, lifting them by +4.9 on average."
   problem: "Zeroth-order fine-tuning removes backpropagation's memory cost, but one perturbation shared across the mini-batch makes the gradient estimate too noisy to match first-order training. That variance is what keeps ZO methods from closing the accuracy gap."
   method: "GRZO gives every example its own pseudo-independent perturbation and combines the per-example losses by group-relative normalization — B gradient directions per step instead of one, at the same forward cost and with peak memory still at the inference floor."
