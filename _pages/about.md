@@ -39,7 +39,7 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge">Under review</div><img src='{{ site.baseurl }}/images/zomcsgd.png' alt="ZO-MC-SGD" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
-[Sample-Efficient Yield Optimization of Analog Circuits via Stochastic Zeroth-Order Methods]({{ site.baseurl }}/papers/zo-mc-sgd/)
+[Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation]({{ site.baseurl }}/papers/zo-mc-sgd/)
 
 **Liyan Tan**, Yequan Zhao, Ben F. Jamroz, Ari Feldman, Zheng Zhang
 

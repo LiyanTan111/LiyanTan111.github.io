@@ -1,10 +1,10 @@
 ---
 layout: paper
 permalink: /papers/zo-mc-sgd/
-title: "Sample-Efficient Yield Optimization of Analog Circuits via Stochastic Zeroth-Order Methods"
+title: "Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation"
 paper:
   slug: zo-mc-sgd
-  title: "Sample-Efficient Yield Optimization of Analog Circuits via Stochastic Zeroth-Order Methods"
+  title: "Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation"
   authors:
     - Liyan Tan
     - Yequan Zhao
@@ -12,9 +12,11 @@ paper:
     - Ari Feldman
     - Zheng Zhang
   year: 2026
-  date: "2026-09-01"
+  date: "2026-09-25"
   venue: "Under review"
-  venue_meta: "Manuscript under review"
+  venue_meta: "arXiv preprint"
+  arxiv: "2609.30678"
+  doi: "10.48550/arXiv.2609.30678"
   tldr: "Yield is the right objective for a manufacturable analog circuit, but a Monte Carlo yield estimate is piecewise constant in the design and expensive to sharpen, so it gives an optimizer almost nothing to follow. ZO-MC-SGD keeps yield as the score and optimizes a smooth specification-margin surrogate instead, turning every eight SPICE calls into one descent direction. It reaches a mean yield of 0.95 within 50–200 simulations on five benchmarks — up to 8x fewer than the best baseline."
   problem: "Yield — the probability that a fabricated instance meets every specification under process variation — is what makes a design manufacturable, but it is a hard optimization target. An empirical yield estimate averages binary pass/fail outcomes, so over large regions of the design space it does not move at all, and sharpening it costs simulations that only buy one scalar. Adjoint gradients would help but need derivatives from inside the simulator, which proprietary SPICE flows do not expose."
   method: "Each SPICE run is converted into signed specification margins rather than a pass/fail bit, and the margins are passed through a softplus and combined into a smooth per-sample loss. A Spearman rank-correlation test on a fixed calibration set confirms that lower loss really does mean higher yield before any optimization starts. ZO-MC-SGD then perturbs the design along random directions in +/- pairs, holding the process realization fixed within each pair, and averages the differences into a stochastic zeroth-order gradient — 2K = 8 SPICE calls per step — followed by an Adam update projected back onto the design box."
@@ -41,13 +43,13 @@ paper:
       a: "No — only independent samples from their joint distribution. Replacing the independent process model with a correlated one (correlation 0.5 among parameters sharing oxide, doping or lithographic effects) leaves the advantage intact: 200 simulations to target on 3-stage csamp against 400 for CMA-ES, and 25 against 100 on 2-stage csmiller."
     - q: "What are the limits, and what comes next?"
       a: "The method needs a process distribution that can be sampled. If that distribution is itself uncertain or drifts across manufacturing conditions, the problem becomes optimization under distributional uncertainty, and a distributionally robust formulation is the natural extension. The bounds carry no explicit process-dimension term, but the experiments only reach 42 mismatch variables; production-scale circuits with hundreds may need variance reduction or structure-exploiting estimators."
-  abstract: "Process variation makes yield a central concern in analog circuit design because a circuit must satisfy all specifications across manufacturing variations, not only at the nominal operating point. Direct yield optimization is difficult, however, because finite-sample Monte Carlo yield estimates are non-smooth with respect to design parameters, while accurate estimates can require many costly SPICE simulations. To address these challenges, zeroth-order Monte Carlo stochastic gradient descent (ZO-MC-SGD) is introduced as a black-box method for sample-efficient yield optimization. The method replaces the binary pass/fail objective with a smooth surrogate based on specification margins and estimates descent directions from a small number of perturbed SPICE simulations. A rank-correlation criterion checks whether the surrogate preserves the design ordering induced by empirical yield. The resulting gradient estimator is analyzed theoretically, with guarantees on its accuracy and sample complexity. Across five analog circuit benchmarks, ZO-MC-SGD reaches a mean yield of 0.95 on four circuits within 50–200 SPICE simulations and the empirical yield ceiling on the fifth. It reduces the required simulation budget by up to a factor of eight relative to the best baseline; several of the five black-box and learning-based baselines fail to reach the target even at substantially larger budgets."
+  abstract: "Yield optimization under process variation is expensive because each candidate design must be evaluated across many Monte Carlo SPICE samples. The resulting finite-sample yield is also piecewise constant in the design parameters, providing little local information for optimization. We introduce zeroth-order Monte Carlo stochastic gradient descent (ZO-MC-SGD), a black-box method that converts continuous specification margins into stochastic descent directions. Each update evaluates opposite design perturbations under shared process samples, allowing a small simulation batch to estimate a local direction without differentiating SPICE or fitting a global surrogate model. A Spearman rank-correlation test checks that the margin-based loss orders designs consistently with empirical yield. We prove that the estimator is unbiased for a Gaussian-smoothed surrogate and derive variance and sample-complexity bounds with no explicit dependence on process dimension. Across five analog circuit benchmarks with up to 30 design variables and 42 process variables, ZO-MC-SGD reaches a mean yield of 0.95 on four circuits within 50–200 simulations and the empirical yield ceiling on the fifth. Relative to the best of five black-box and learning-based baselines, it reduces the required simulation budget by up to a factor of eight."
   bibtex: |
-    @unpublished{tan2026yield,
-      title  = {Sample-Efficient Yield Optimization of Analog Circuits via Stochastic Zeroth-Order Methods},
-      author = {Tan, Liyan and Zhao, Yequan and Jamroz, Ben F. and Feldman, Ari and Zhang, Zheng},
-      year   = {2026},
-      note   = {Manuscript under review}
+    @article{tan2026yield,
+      title   = {Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation},
+      author  = {Tan, Liyan and Zhao, Yequan and Jamroz, Ben F. and Feldman, Ari and Zhang, Zheng},
+      journal = {arXiv preprint arXiv:2609.30678},
+      year    = {2026}
     }
 ---
 
