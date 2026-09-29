@@ -18,25 +18,25 @@ I am also broadly interested in **agentic LLMs** — in particular how tool-usin
 
 You can find more details on [Google Scholar](https://scholar.google.com/citations?user=xBvnXWsAAAAJ&hl=en) and my [CV]({{ site.baseurl }}/cv/).
 
-# 📖 Education
+# Education
 - *2025.04 - 2028 (expected)*, **Ph.D. in Computer Engineering**, UC Santa Barbara
 - *2023.09 - 2025.03*, **M.S. in Computer Engineering**, UC Santa Barbara
 - *2019.09 - 2023.06*, **B.S. in Electronic Information Engineering**, Huazhong University of Science & Technology
 
-# 🔥 News
-- *2026.08*: &nbsp;🎉 *GRZO: Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning* accepted to Findings of the Association for Computational Linguistics: **EMNLP 2026**.
+# News
+- *2026.08*: *GRZO: Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning* accepted to Findings of the Association for Computational Linguistics: **EMNLP 2026**.
 
-# 💻 Experience
+# Experience
 - *2025.06 - 2025.09*, **Software Architect Intern**, [Cadence Design Systems](https://www.cadence.com/), Austin, TX
   - LLM copilot agent for Voltus, Cadence's power-integrity signoff solver: natural-language design intent into verified tool commands, GUI actions, and automated root-cause analysis.
   - On-premise deployment under enterprise data constraints, via retrieval over EDA documentation, parameter-efficient fine-tuning, and teacher-to-student distillation.
 
-# 📝 Publications 
+# Publications
 
 ## Circuit Design Optimization
 {: .pub-group}
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">Under review</div><img src='{{ site.baseurl }}/images/zomcsgd.png' alt="ZO-MC-SGD" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--review">Under review</div><img src='{{ site.baseurl }}/images/zomcsgd.png' alt="ZO-MC-SGD" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation]({{ site.baseurl }}/papers/zo-mc-sgd/)
@@ -45,11 +45,11 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 
 <span class="paper-keywords">Analog yield optimization · Process variation · Stochastic zeroth-order optimization</span>
 
-<a class="project-link" href="{{ site.baseurl }}/papers/zo-mc-sgd/">Project page →</a>
+<div class="paper-actions"><a class="pill-btn pill-btn--primary" href="{{ site.baseurl }}/papers/zo-mc-sgd/"><i class="fas fa-book-open" aria-hidden="true"></i> Project page</a><a class="pill-btn" href="https://github.com/LiyanTan111/ZO-MC-SGD"><i class="fab fa-github" aria-hidden="true"></i> Code</a></div>
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">Under review</div><img src='{{ site.baseurl }}/images/zoaf.png' alt="ZOAF" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--review">Under review</div><img src='{{ site.baseurl }}/images/zoaf.png' alt="ZOAF" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [ZOAF: Towards Efficient Zeroth-Order Optimization for Analog/RF Circuit Design]({{ site.baseurl }}/papers/zoaf/)
@@ -58,14 +58,14 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 
 <span class="paper-keywords">Analog/RF circuit sizing · Simulation-Efficient Optimization</span>
 
-<a class="project-link" href="{{ site.baseurl }}/papers/zoaf/">Project page →</a>
+<div class="paper-actions"><a class="pill-btn pill-btn--primary" href="{{ site.baseurl }}/papers/zoaf/"><i class="fas fa-book-open" aria-hidden="true"></i> Project page</a><a class="pill-btn" href="https://github.com/LiyanTan111/ZOAF"><i class="fab fa-github" aria-hidden="true"></i> Code</a></div>
 </div>
 </div>
 
 ## Machine Learning Optimization
 {: .pub-group}
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">EMNLP 2026</div><img src='{{ site.baseurl }}/images/grzo.png' alt="GRZO" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--accepted">EMNLP 2026</div><img src='{{ site.baseurl }}/images/grzo.png' alt="GRZO" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [GRZO: Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning]({{ site.baseurl }}/papers/grzo/)
@@ -74,11 +74,11 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 
 <span class="paper-keywords">LLM fine-tuning · Zeroth-order optimization · Variance reduction</span>
 
-<a class="project-link" href="{{ site.baseurl }}/papers/grzo/">Project page →</a>
+<div class="paper-actions"><a class="pill-btn pill-btn--primary" href="{{ site.baseurl }}/papers/grzo/"><i class="fas fa-book-open" aria-hidden="true"></i> Project page</a><a class="pill-btn" href="https://github.com/LiyanTan111/GRZO-public"><i class="fab fa-github" aria-hidden="true"></i> Code</a></div>
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">arXiv 2026</div><img src='{{ site.baseurl }}/images/iapo.png' alt="IAPO" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--preprint">arXiv 2026</div><img src='{{ site.baseurl }}/images/iapo.png' alt="IAPO" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [IAPO: Input Attribution-Aware Policy Optimization for Tool Use in Small Multimodal Agents](https://arxiv.org/abs/2606.11652)
@@ -86,10 +86,12 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 Yifan Yang, Zhen Zhang, Jiayi Tian, **Liyan Tan**, Zheng Zhang
 
 <span class="paper-keywords">Multimodal Tool Use · Input Attribution · Policy Optimization</span>
+
+<div class="paper-actions"><a class="pill-btn" href="https://arxiv.org/abs/2606.11652"><i class="ai ai-arxiv" aria-hidden="true"></i> arXiv</a></div>
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">arXiv 2026</div><img src='{{ site.baseurl }}/images/fura.png' alt="FuRA" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--preprint">arXiv 2026</div><img src='{{ site.baseurl }}/images/fura.png' alt="FuRA" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [FuRA: Full-Rank Parameter-Efficient Fine-Tuning with Spectral Preconditioning](https://arxiv.org/abs/2605.22869)
@@ -97,10 +99,12 @@ Yifan Yang, Zhen Zhang, Jiayi Tian, **Liyan Tan**, Zheng Zhang
 Yequan Zhao, Ruijie Zhang, **Liyan Tan**, Niall Moran, Tong Qin, Zheng Zhang
 
 <span class="paper-keywords">PEFT · Full-rank adaptation · Spectral preconditioning</span>
+
+<div class="paper-actions"><a class="pill-btn" href="https://arxiv.org/abs/2605.22869"><i class="ai ai-arxiv" aria-hidden="true"></i> arXiv</a></div>
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge">arXiv 2026</div><img src='{{ site.baseurl }}/images/muon.png' alt="MUON+" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--preprint">arXiv 2026</div><img src='{{ site.baseurl }}/images/muon.png' alt="MUON+" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [MUON+: Towards More Effective Muon via One Additional Normalization Step for LLM Pre-training](https://arxiv.org/abs/2602.21545)
@@ -108,5 +112,7 @@ Yequan Zhao, Ruijie Zhang, **Liyan Tan**, Niall Moran, Tong Qin, Zheng Zhang
 Ruijie Zhang, Yequan Zhao, Ziyue Liu, Zhengyang Wang, Yupeng Su, **Liyan Tan**, Zheng Zhang
 
 <span class="paper-keywords">LLM pre-training · Muon · Normalization</span>
+
+<div class="paper-actions"><a class="pill-btn" href="https://arxiv.org/abs/2602.21545"><i class="ai ai-arxiv" aria-hidden="true"></i> arXiv</a></div>
 </div>
 </div>

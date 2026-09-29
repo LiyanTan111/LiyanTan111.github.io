@@ -432,3 +432,5 @@ a:hover { color: mix(#000, $accent, 22%); }
 .paper-fig--narrow img { max-width: 620px; margin: 0 auto; }
 /* 表格里我们这一列加重 */
 .paper-table td.ours { font-weight: 700; color: $accent-deep; }
+
+@import "refresh";

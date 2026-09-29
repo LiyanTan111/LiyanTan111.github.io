@@ -1,0 +1,485 @@
+/* ==========================================================================
+   Refresh — 在模版之上的一层视觉统一：
+   低饱和、留白、细线、圆角卡片；正文 Inter，标题与姓名用 Source Serif 4。
+   ========================================================================== */
+
+$ink:        #1d2327;
+$text:       #3d444b;
+$muted:      #6b737b;
+$faint:      #9aa1a8;
+$line:       #e6e8eb;
+$line-soft:  #f0f1f3;
+$paper:      #fafaf8;
+$accent:     #0a6672;
+$accent-deep:#1f3a5f;
+$accent-soft:#e7f0f1;
+$sand:       #f4efe4;
+$sand-ink:   #7a6843;
+$radius:     14px;
+$shadow-soft: 0 1px 2px rgba(16, 24, 40, .04), 0 8px 24px rgba(16, 24, 40, .05);
+
+/* ---------- 基础 ---------- */
+body {
+    background: $paper;
+    color: $text;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+.page__content {
+    line-height: 1.72;
+    color: $text;
+
+    a:not(.pill-btn):not(.paper-btn):not(.paper-page__back) {
+        color: $accent;
+        text-decoration: underline;
+        text-decoration-color: rgba(10, 102, 114, .3);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+        transition: color .15s, text-decoration-color .15s;
+        &:hover { color: darken($accent, 8%); text-decoration-color: currentColor; }
+    }
+    strong { color: $ink; }
+
+    /* 大标题：衬线、细线、左端一小截主色 */
+    h1 {
+        font-family: $serif;
+        font-weight: 600;
+        font-size: 1.62em;
+        letter-spacing: -.005em;
+        color: $ink;
+        margin: 2.3em 0 .9em;
+        padding-bottom: .4em;
+        border-bottom: 1px solid $line !important;
+    }
+    h1::after { height: 2px; width: 1.8em; }
+
+    ul li { margin-bottom: .5em; }
+    ul li::marker { color: $faint; }
+
+    /* Education / News / Experience 的日期：去斜体、等宽数字、弱化 */
+    li > em:first-child {
+        font-style: normal;
+        font-variant-numeric: tabular-nums;
+        font-size: .9em;
+        color: $muted;
+        letter-spacing: .01em;
+    }
+}
+
+/* ---------- 顶栏 ---------- */
+.masthead {
+    background: rgba(250, 250, 248, .86);
+    -webkit-backdrop-filter: saturate(160%) blur(10px);
+    backdrop-filter: saturate(160%) blur(10px);
+    border-bottom: 1px solid $line;
+}
+.masthead__menu-item a {
+    color: $muted;
+    font-weight: 500;
+    font-size: .93em;
+    transition: color .15s;
+    &:hover { color: $ink; }
+}
+.masthead__menu-item--lg a {
+    font-family: $serif;
+    font-weight: 600;
+    font-size: 1.12em;
+    color: $ink;
+    letter-spacing: -.005em;
+}
+.greedy-nav .visible-links a::before { background: $accent; height: 2px; }
+
+/* ---------- 侧栏 ---------- */
+.author__avatar img {
+    padding: 4px;
+    background: #fff;
+    border: 1px solid $line;
+    box-shadow: $shadow-soft;
+}
+.author__name {
+    font-family: $serif;
+    font-weight: 600;
+    font-size: 1.45em;
+    color: $ink;
+    border-bottom-width: 2px !important;
+}
+.author__bio { color: $text; font-size: .92em; line-height: 1.55; }
+.author__urls {
+    li { color: $muted; }
+    a { color: $text !important; transition: color .15s; }
+    a:hover { color: $accent !important; }
+    .fa, .fas, .fab, .ai { color: $faint; }
+}
+
+/* ---------- Publications 分组标题 ---------- */
+.page__content h2.pub-group {
+    font-family: $global-font-family;
+    font-size: 1.02em;
+    font-weight: 600;
+    letter-spacing: .12em;
+    color: $accent-deep;
+    padding: .55em .95em;
+    border-left: 3px solid $accent;
+    border-radius: 0 10px 10px 0;
+    background: linear-gradient(to right, #e9f1f2 0%, #f3f7f7 60%, rgba(243, 247, 247, 0) 100%);
+}
+
+/* ---------- 论文卡片 ---------- */
+.paper-box {
+    background: #fff;
+    border: 1px solid $line;
+    border-radius: $radius;
+    padding: 1.35em 1.45em;
+    margin: 0 0 1.1em;
+    transition: border-color .2s, box-shadow .2s, transform .2s;
+
+    &:hover {
+        border-color: darken($line, 6%);
+        box-shadow: $shadow-soft;
+        transform: translateY(-1px);
+    }
+
+    .paper-box-image img {
+        box-shadow: none;
+        border: 1px solid $line-soft;
+        border-radius: 8px;
+        background: #fff;
+    }
+
+    .paper-box-text {
+        > p { margin: 0 0 .45em; }
+        > p:first-child a {
+            color: $ink !important;
+            font-weight: 600;
+            line-height: 1.45;
+            text-decoration: none !important;
+            &:hover { color: $accent !important; text-decoration: underline !important; text-decoration-color: rgba(10,102,114,.35) !important; }
+        }
+        > p:nth-child(2) { color: $muted; font-size: .94em; }
+    }
+}
+.paper-box + h2.pub-group { margin-top: 2.6em; }
+.paper-keywords { font-size: .84em; color: $muted; letter-spacing: .005em; }
+
+/* 状态角标：接收 = 主色，审稿中 = 暖沙色，预印本 = 中性灰 */
+.badge {
+    padding: .22em .75em;
+    margin-bottom: .8em;
+    font-size: .72em;
+    font-weight: 600;
+    letter-spacing: .04em;
+    border-radius: 999px;
+    background: #eef0f2;
+    color: #4f5963;
+}
+.badge--accepted { background: $accent-soft; color: $accent; box-shadow: inset 0 0 0 1px rgba(10, 102, 114, .16); }
+.badge--review   { background: $sand; color: $sand-ink; box-shadow: inset 0 0 0 1px rgba(122, 104, 67, .14); }
+.badge--preprint { background: #eff1f4; color: #55606b; box-shadow: inset 0 0 0 1px rgba(85, 96, 107, .1); }
+
+/* Project page / Code 按钮 */
+.paper-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5em;
+    margin-top: .85em;
+}
+.pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .45em;
+    padding: .34em .9em;
+    font-size: .8em;
+    font-weight: 500;
+    line-height: 1.4;
+    border: 1px solid $line;
+    border-radius: 999px;
+    background: #fff;
+    color: $text !important;
+    text-decoration: none !important;
+    transition: all .15s;
+
+    i { color: $faint; font-size: .95em; transition: color .15s; }
+    &:hover { border-color: $accent; color: $accent !important; i { color: $accent; } }
+
+    &--primary {
+        background: $accent-soft;
+        border-color: transparent;
+        color: $accent !important;
+        i { color: $accent; }
+        &:hover { background: $accent; color: #fff !important; i { color: #fff; } }
+    }
+}
+
+/* ==========================================================================
+   论文项目页
+   ========================================================================== */
+.paper-page {
+    max-width: 50em;
+
+    &__back {
+        display: inline-block;
+        margin: .2em 0 1.6em;
+        font-size: .82em;
+        color: $muted !important;
+        text-decoration: none !important;
+        &:hover { color: $accent !important; }
+    }
+
+    &__venue {
+        padding: .24em .85em;
+        margin-bottom: 1em;
+        font-size: .74em;
+        font-weight: 600;
+        letter-spacing: .04em;
+        border-radius: 999px;
+        background: $accent-soft !important;
+        color: $accent;
+        box-shadow: inset 0 0 0 1px rgba(10, 102, 114, .16);
+    }
+
+    &__title {
+        font-family: $serif;
+        font-size: 2.05em !important;
+        font-weight: 600;
+        line-height: 1.22;
+        letter-spacing: -.012em;
+        color: $ink;
+        margin: 0 0 .55em !important;
+        padding-bottom: 0 !important;
+        border-bottom: 0 !important;
+        &::after { display: none; }
+    }
+
+    &__authors { font-size: 1em; color: $text; margin-bottom: 1.1em; strong { color: $ink; } }
+    &__links { display: flex; flex-wrap: wrap; gap: .5em; margin-bottom: 2.2em; }
+
+    h2 {
+        font-family: $serif;
+        font-weight: 600;
+        font-size: 1.42em;
+        color: $ink;
+        margin: 2.6em 0 1em;
+        padding-bottom: .45em;
+        border-bottom: 1px solid $line;
+    }
+}
+
+.paper-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .45em;
+    margin: 0;
+    padding: .4em 1em;
+    font-size: .84em;
+    font-weight: 500;
+    border: 1px solid $line;
+    border-radius: 999px;
+    background: #fff;
+    color: $ink !important;
+    transition: all .15s;
+    i { color: $muted; transition: color .15s; }
+    &:hover { border-color: $accent; color: $accent !important; background: #fff; i { color: $accent; } }
+}
+
+.paper-tldr {
+    margin: 0 0 2.4em;
+    padding: 1.25em 1.45em;
+    background: #f2f6f6;
+    border: 1px solid #e1eaea;
+    border-left: 1px solid #e1eaea !important;
+    border-radius: $radius;
+
+    &__label {
+        display: block;
+        margin-bottom: .45em;
+        font-size: .7em;
+        font-weight: 700;
+        letter-spacing: .16em;
+        color: $accent;
+    }
+    p { margin: 0; color: $ink; font-size: 1.02em; line-height: 1.7; }
+}
+
+.paper-fig img,
+.fig-row img {
+    border: 1px solid $line !important;
+    border-radius: 12px !important;
+    padding: 12px !important;
+    background: #fff;
+}
+.paper-fig figcaption,
+.fig-caption {
+    font-family: $global-font-family;
+    font-size: .84em;
+    line-height: 1.62;
+    color: $muted;
+}
+.paper-fig figcaption { margin-top: .85em; }
+
+/* Problem / Method / Main result：左编号标签、右正文，细线分隔 */
+.paper-pmr {
+    margin: 2.4em 0 1em;
+    border-top: 1px solid $line;
+
+    &__row {
+        display: grid;
+        grid-template-columns: 9em 1fr;
+        gap: 1.6em;
+        padding: 1.35em 0;
+        border-bottom: 1px solid $line;
+
+        @media (max-width: 640px) { grid-template-columns: 1fr; gap: .5em; }
+    }
+
+    h3 {
+        margin: 0 !important;
+        font-size: .76em !important;
+        font-weight: 700;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+        color: $ink !important;
+
+        span {
+            display: block;
+            margin-bottom: .2em;
+            font-family: $serif;
+            font-size: 2.1em;
+            font-weight: 500;
+            letter-spacing: 0;
+            color: rgba(10, 102, 114, .45);
+        }
+    }
+    p { margin: 0 !important; line-height: 1.72; }
+}
+
+/* 表格：圆角外框、表头浅底、悬停行 */
+.paper-table {
+    table {
+        border: 1px solid $line;
+        border-radius: 12px;
+        border-collapse: separate;
+        border-spacing: 0;
+        overflow: hidden;
+        background: #fff;
+    }
+    th { background: #f7f8f8 !important; color: $ink; font-weight: 600; border-bottom: 1px solid $line !important; }
+    td { border-bottom: 1px solid $line-soft !important; }
+    tbody tr:last-child td { border-bottom: 0 !important; }
+    tbody tr:hover td { background: #fafbfb; }
+    caption { font-size: .84em; color: $muted; padding-bottom: .7em; }
+}
+
+/* FAQ / Abstract：同一张圆角卡片里的折叠项 */
+.paper-faq {
+    border: 1px solid $line;
+    border-radius: $radius;
+    background: #fff;
+    overflow: hidden;
+
+    .paper-fold {
+        border-bottom: 1px solid $line-soft;
+        &:last-child { border-bottom: 0; }
+
+        > summary {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1em;
+            padding: 1em 1.3em;
+            font-weight: 600;
+            font-size: .96em;
+            color: $ink;
+            transition: background .15s;
+            &:hover { background: #fafbfb; }
+            &::before { display: none; }
+            &::after {
+                content: '';
+                flex: 0 0 auto;
+                width: .5em;
+                height: .5em;
+                border-right: 1.5px solid $faint;
+                border-bottom: 1.5px solid $faint;
+                transform: rotate(45deg) translateY(-2px);
+                transition: transform .2s;
+            }
+        }
+        &[open] > summary::after { transform: rotate(-135deg) translateY(-1px); }
+    }
+    .paper-fold__body {
+        margin: 0;
+        padding: 0 1.3em 1.15em;
+        p { margin: 0; color: $text; line-height: 1.72; }
+    }
+}
+
+/* BibTeX + 复制按钮 */
+.paper-bibtex-wrap { position: relative; }
+.paper-bibtex {
+    margin: 0;
+    padding: 1.15em 1.35em;
+    background: #f6f7f8;
+    border: 1px solid $line;
+    border-radius: 12px;
+    font-size: .78em;
+    line-height: 1.65;
+    overflow-x: auto;
+    code { background: none; padding: 0; }
+}
+.copy-btn {
+    position: absolute;
+    top: .7em;
+    right: .7em;
+    padding: .25em .8em;
+    font: 500 .72em $global-font-family;
+    color: $muted;
+    background: #fff;
+    border: 1px solid $line;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all .15s;
+    &:hover { color: $accent; border-color: $accent; }
+}
+
+/* 页脚 */
+.page__footer { background: transparent; border-top: 1px solid $line; color: $faint; }
+
+/* ---------- 第二轮细节 ---------- */
+.masthead__inner-wrap, .greedy-nav { background: transparent !important; }
+.greedy-nav button {
+    background: transparent !important;
+    .navicon, .navicon::before, .navicon::after { background: $muted !important; }
+}
+.greedy-nav .hidden-links {
+    border-color: $line;
+    border-radius: 12px;
+    box-shadow: $shadow-soft;
+    a:hover { background: $accent-soft !important; color: $accent !important; }
+}
+
+.profile_box .author__content .author__name,
+h3.author__name {
+    font-family: $serif !important;
+    font-weight: 600;
+    letter-spacing: -.005em;
+}
+
+.page__content .paper-page__back { display: block; width: max-content; }
+.page__content .paper-page__title {
+    border-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    &::after { display: none !important; }
+    @media (max-width: 640px) { font-size: 1.55em !important; }
+}
+
+@include breakpoint($medium) {
+    .paper-box .paper-box-text { padding-left: 1.7em !important; }
+}
+.page__content h2.pub-group { margin-bottom: .95em; }
+.page__content .fig-caption { font-size: .84em; line-height: 1.62; color: $muted; }
+.paper-table caption { padding-left: .15em; }
+.paper-bibtex { padding-top: 2.4em; }
+/* 卡片图不要越出自己那一列，否则会顶到右侧文字 */
+.paper-box .paper-box-image { box-sizing: border-box; }
+.paper-box .paper-box-image > div { max-width: 100%; }
+.paper-box .paper-box-image img { max-width: 100% !important; }

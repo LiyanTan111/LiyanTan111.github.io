@@ -5,6 +5,8 @@ layout: default
 
 <article class="paper-page" itemscope itemtype="https://schema.org/ScholarlyArticle">
 
+  <a class="paper-page__back" href="{{ site.baseurl }}/#publications">&larr; Publications</a>
+
   <div class="paper-page__venue">{{ p.venue }}</div>
   <h1 class="paper-page__title" itemprop="headline">{{ page.title }}</h1>
 
@@ -13,13 +15,13 @@ layout: default
   </p>
 
   <p class="paper-page__links">
-    {% if p.arxiv %}<a class="paper-btn" href="https://arxiv.org/abs/{{ p.arxiv }}">arXiv</a>{% endif %}
-    {% if p.arxiv %}<a class="paper-btn" href="https://arxiv.org/pdf/{{ p.arxiv }}">PDF</a>{% endif %}
-    {% if p.code %}<a class="paper-btn" href="{{ p.code }}">Code</a>{% endif %}
-    <a class="paper-btn" href="#bibtex">BibTeX</a>
+    {% if p.arxiv %}<a class="paper-btn" href="https://arxiv.org/abs/{{ p.arxiv }}"><i class="ai ai-arxiv" aria-hidden="true"></i> arXiv</a>{% endif %}
+    {% if p.arxiv %}<a class="paper-btn" href="https://arxiv.org/pdf/{{ p.arxiv }}"><i class="fas fa-file-pdf" aria-hidden="true"></i> PDF</a>{% endif %}
+    {% if p.code %}<a class="paper-btn" href="{{ p.code }}"><i class="fab fa-github" aria-hidden="true"></i> Code</a>{% endif %}
+    <a class="paper-btn" href="#bibtex"><i class="fas fa-quote-right" aria-hidden="true"></i> BibTeX</a>
   </p>
 
-  {% if p.tldr %}<p class="paper-tldr">{{ p.tldr }}</p>{% endif %}
+  {% if p.tldr %}<div class="paper-tldr"><span class="paper-tldr__label">TL;DR</span><p>{{ p.tldr }}</p></div>{% endif %}
 
   {% for f in p.figures %}{% if f.kind == 'method' %}
   <figure class="paper-fig">
@@ -29,34 +31,42 @@ layout: default
   {% endif %}{% endfor %}
 
   <div class="paper-pmr">
-    {% if p.problem %}<div><h3>Problem</h3><p>{{ p.problem }}</p></div>{% endif %}
-    {% if p.method %}<div><h3>Method</h3><p>{{ p.method }}</p></div>{% endif %}
-    {% if p.result %}<div><h3>Main result</h3><p>{{ p.result }}</p></div>{% endif %}
+    {% if p.problem %}<div class="paper-pmr__row"><h3><span>01</span>Problem</h3><p>{{ p.problem }}</p></div>{% endif %}
+    {% if p.method %}<div class="paper-pmr__row"><h3><span>02</span>Method</h3><p>{{ p.method }}</p></div>{% endif %}
+    {% if p.result %}<div class="paper-pmr__row"><h3><span>03</span>Main result</h3><p>{{ p.result }}</p></div>{% endif %}
   </div>
 
   {%- comment -%} 结果区：由页面正文自由撰写（图、并排图、表格都可以） {%- endcomment -%}
   {{ content }}
 
   {% if p.abstract %}
+  <h2>Abstract</h2>
+  <div class="paper-faq">
   <details class="paper-fold">
-    <summary>Abstract</summary>
+    <summary>Read the full abstract</summary>
     <div class="paper-fold__body" itemprop="abstract"><p>{{ p.abstract }}</p></div>
   </details>
+  </div>
   {% endif %}
 
   {% if p.faq.size > 0 %}
   <h2>Frequently asked questions</h2>
+  <div class="paper-faq">
   {% for f in p.faq %}
   <details class="paper-fold">
     <summary>{{ f.q }}</summary>
     <div class="paper-fold__body"><p>{{ f.a }}</p></div>
   </details>
   {% endfor %}
+  </div>
   {% endif %}
 
   {% if p.bibtex %}
   <h2 id="bibtex">Cite this work</h2>
-  <pre class="paper-bibtex"><code>{{ p.bibtex | strip }}</code></pre>
+  <div class="paper-bibtex-wrap">
+    <button class="copy-btn" type="button" data-copy="bibtex-src">Copy</button>
+    <pre class="paper-bibtex"><code id="bibtex-src">{{ p.bibtex | strip }}</code></pre>
+  </div>
   {% endif %}
 
 </article>

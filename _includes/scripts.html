@@ -15,3 +15,17 @@
     });
   });
 </script>
+
+<script>
+  /* 论文页 BibTeX 一键复制 */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('.copy-btn');
+    if (!b) return;
+    var el = document.getElementById(b.getAttribute('data-copy'));
+    if (!el || !navigator.clipboard) return;
+    navigator.clipboard.writeText(el.innerText).then(function () {
+      b.textContent = 'Copied';
+      setTimeout(function () { b.textContent = 'Copy'; }, 1600);
+    });
+  });
+</script>
