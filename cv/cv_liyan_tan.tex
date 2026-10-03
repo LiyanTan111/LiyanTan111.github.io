@@ -101,6 +101,9 @@
 \pub{ZOAF: Towards Efficient Zeroth-Order Optimization for Analog/RF Circuit Design\paperlink{https://arxiv.org/abs/2606.02869}}
 {\me, Yequan Zhao, Jinming Lu, Ben F. Jamroz, Ari Feldman, Zheng Zhang, under review at \textit{IEEE TCAD}, arXiv:2606.02869, 2026.}
 
+\pub{Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation\paperlink{https://arxiv.org/abs/2609.30678}}
+{\me, Yequan Zhao, Ben F. Jamroz, Ari Feldman, Zheng Zhang, under review, arXiv:2609.30678, 2026.}
+
 \pub{IAPO: Input Attribution-Aware Policy Optimization for Tool Use in Small Multimodal Agents\paperlink{https://arxiv.org/abs/2606.11652}}
 {Yifan Yang, Zhen Zhang, Jiayi Tian, \me, Zheng Zhang, \textit{arXiv preprint arXiv:2606.11652}, 2026.}
 
@@ -129,7 +132,8 @@
 \begin{cvitems}
   \item Proposed ZOAF, a surrogate-free framework recovering gradient-descent directions from a small number of black-box circuit simulations, with a hybrid schedule from random-direction exploration to coordinate-wise refinement, quasi-random multi-start, and a sliding-window monitor for early stopping and feasibility.
   \item Achieved the best median figure of merit on all three benchmark schematics, with up to an order-of-magnitude advantage in median peaking on a 22-parameter amplifier and $1.3$-$3.8\times$ fewer simulator calls to convergence.
-  \item Extending the framework toward uncertainty-aware design: stochastic zeroth-order optimization to handle process variations in nanoscale circuits, and distributionally robust circuit optimization that accounts for distribution shift in those variations.
+  \item Extended the approach to yield optimization under process variation with ZO-MC-SGD, which turns specification margins into Monte Carlo zeroth-order descent directions with no explicit dependence on process dimension; reached a mean yield of 0.95 on four of five benchmarks within 50--200 SPICE simulations, up to $8\times$ fewer than the best baseline.
+  \item Next: distributionally robust circuit optimization that accounts for distribution shift in process variations.
 \end{cvitems}
 
 \vspace{0.6em}
