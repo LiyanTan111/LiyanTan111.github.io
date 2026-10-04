@@ -7,7 +7,7 @@ paper:
   short: GRZO
   short_html: "GR<em>ZO</em>"
   subtitle: "Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning"
-  tagline: "One perturbation per example, not one per batch: B gradient directions per step for the price of MeZO's one."
+  tagline: "One perturbation per example, not one per batch."
   authors:
     - Liyan Tan
     - Yequan Zhao
@@ -123,21 +123,21 @@ paper:
       <div class="pp-widget__head">
         <div>
           <p class="pp-widget__title">Watch the estimate settle <span class="pp-tag">Toy simulation</span></p>
-          <p class="pp-widget__sub">Each arrow is one step's gradient estimate, drawn at its true angle to the exact batch gradient (pointing up). 32-dimensional Gaussian toy &mdash; an illustration of the theorem, not experimental data.</p>
+          <p class="pp-widget__sub">Each arrow is one step's gradient estimate, drawn at its true angle to the exact batch gradient (dashed, pointing up). 32-dimensional Gaussian toy &mdash; an illustration of the theorem, not experimental data.</p>
         </div>
-        <div class="pp-controls" style="display:flex;flex-direction:column;gap:.5rem">
+      </div>
+      <div class="pp-toy">
+        <div class="pp-twin pp-toy__panels">
+          <div class="pp-panel"><div class="pp-panel__label"><b>MeZO</b><span>1 direction / step</span></div><canvas id="toy-mezo" width="520" height="360" aria-label="MeZO gradient estimates"></canvas></div>
+          <div class="pp-panel"><div class="pp-panel__label"><b>GRZO</b><span id="toy-dirs">16 directions / step</span></div><canvas id="toy-grzo" width="520" height="360" aria-label="GRZO gradient estimates"></canvas></div>
+        </div>
+        <div class="pp-toy__side">
           <div class="pp-range"><label for="toy-b">Batch size B</label><input type="range" id="toy-b" min="1" max="32" step="1" value="16"><output id="toy-b-out">16</output></div>
           <div class="pp-range"><label for="toy-c">Alignment c</label><input type="range" id="toy-c" min="0" max="1" step="0.01" value="0.83"><output id="toy-c-out">0.83</output></div>
+          <div class="pp-readout"><span>MeZO · mean cosine</span><b id="toy-cos-m">–</b></div>
+          <div class="pp-readout pp-readout--ours"><span>GRZO · mean cosine</span><b id="toy-cos-g">–</b></div>
+          <div class="pp-readout"><span>Predicted B<sub style="text-transform:none">eff</sub></span><b id="toy-beff">–</b><small>= cB + (1 − c), the variance reduction</small></div>
         </div>
-      </div>
-      <div class="pp-twin">
-        <div class="pp-panel"><div class="pp-panel__label"><b>MeZO</b><span>1 direction / step</span></div><canvas id="toy-mezo" width="560" height="420" aria-label="MeZO gradient estimates"></canvas></div>
-        <div class="pp-panel"><div class="pp-panel__label"><b>GRZO</b><span id="toy-dirs">16 directions / step</span></div><canvas id="toy-grzo" width="560" height="420" aria-label="GRZO gradient estimates"></canvas></div>
-      </div>
-      <div class="pp-readouts">
-        <div class="pp-readout"><span>MeZO · mean cosine</span><b id="toy-cos-m">–</b><small>to the exact gradient</small></div>
-        <div class="pp-readout pp-readout--ours"><span>GRZO · mean cosine</span><b id="toy-cos-g">–</b><small>to the exact gradient</small></div>
-        <div class="pp-readout"><span>Predicted B<sub style="text-transform:none">eff</sub></span><b id="toy-beff">–</b><small>= cB + (1 − c), the variance reduction</small></div>
       </div>
     </div>
 
@@ -163,7 +163,7 @@ paper:
       <div class="pp-widget__head">
         <div>
           <p class="pp-widget__title">Accuracy by task</p>
-          <p class="pp-widget__sub">Accuracy (%) for classification, F1 for SQuAD and DROP. The line runs from MeZO to GRZO; the black tick is first-order Adam, which needs full backpropagation memory.</p>
+          <p class="pp-widget__sub">Accuracy (%) for classification, F1 for SQuAD and DROP. Each column is a task: the line rises from MeZO to GRZO, and the black dash is first-order Adam, which needs full backpropagation memory. The top row is GRZO&rsquo;s gain over MeZO.</p>
         </div>
         <div class="pp-seg" id="seg-model" role="group" aria-label="Model">
           <button type="button" data-value="llama" aria-pressed="true">Llama3-8B</button>
@@ -174,10 +174,27 @@ paper:
       <div class="pp-legend"><span><i style="background:var(--s-mezo)"></i>MeZO</span><span><i style="background:var(--s-fzoo)"></i>FZOO</span><span><i style="background:var(--s-ours)"></i>GRZO (ours)</span><span><i class="tick"></i>Adam (first-order)</span></div>
       <details class="pp-details"><summary>Show the full table (incl. LoRA)</summary><div class="pp-tablewrap" id="table-results"></div></details>
     </div>
-    <figure class="pp-figure reveal">
-      <img src="{{ site.baseurl }}/images/papers/grzo-alltasks.png" alt="Training loss curves on four tasks against steps and wall-clock time">
-      <figcaption><strong>Faster in steps and on the clock.</strong> Training loss on Llama3-8B (RTE, MultiRC) and OPT-13B (SQuAD, DROP), against training steps and wall-clock time. GRZO's 23% per-step premium is repaid: it reaches any given loss level sooner. (Figure from the paper, where GRZO is drawn in red.)</figcaption>
-    </figure>
+    <div class="pp-widget reveal" id="w-conv">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Convergence: hover to compare</p>
+          <p class="pp-widget__sub">Training loss as in the paper (Llama3-8B: MultiRC, RTE; OPT-13B: DROP, SQuAD), plotted against steps or wall-clock time. Move the cursor: the dashed line is GRZO&rsquo;s loss at that point, and the rings mark where each baseline first gets that low.</p>
+        </div>
+        <div class="pp-seg" id="seg-conv" role="group" aria-label="Task">
+          <button type="button" data-value="multirc" aria-pressed="false">MultiRC · time</button>
+          <button type="button" data-value="rte" aria-pressed="true">RTE · steps</button>
+          <button type="button" data-value="drop" aria-pressed="false">DROP · time</button>
+          <button type="button" data-value="squad" aria-pressed="false">SQuAD · steps</button>
+        </div>
+      </div>
+      <p class="pp-conv__summary" id="conv-summary"></p>
+      <div class="pp-conv">
+        <div><div class="pp-chart" id="chart-conv"></div>
+          <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>GRZO</span><span><i style="background:var(--s-fzoo)"></i>FZOO</span><span><i style="background:var(--s-mezo)"></i>MeZO</span></div></div>
+        <div class="pp-conv__read" id="conv-read" aria-live="polite"></div>
+      </div>
+      <p class="pp-caption">Curves digitized from the paper&rsquo;s convergence figure (smoothed as plotted there), clipped to the same window; MeZO diverges on DROP. GRZO&rsquo;s 23% per-step premium is already included in the wall-clock panels.</p>
+    </div>
   </div>
 </section>
 
@@ -218,7 +235,7 @@ paper:
       <div class="pp-widget__head">
         <div>
           <p class="pp-widget__title">Variant before → after</p>
-          <p class="pp-widget__sub">Each row moves from the published variant (left dot) to the same variant with the GRZO core (right dot). The hollow ring is vanilla GRZO for reference.</p>
+          <p class="pp-widget__sub">Each column rises from the published variant (orange dot) to the same variant with the GRZO core swapped in (blue dot). The hollow ring is vanilla GRZO for reference; the top row is the gain.</p>
         </div>
         <div class="pp-seg" id="seg-var" role="group" aria-label="Variant">
           <button type="button" data-value="sparse" aria-pressed="true">Sparse</button>

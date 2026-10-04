@@ -58,7 +58,7 @@
     }
 
     function draw(cv, key, color) {
-      var ctx = cv.getContext('2d'), W = cv.width, H = cv.height, cx = W / 2, cy = H * 0.86, R = H * 0.74;
+      var ctx = cv.getContext('2d'), W = cv.width, H = cv.height, cx = W / 2, cy = H * 0.9, R = Math.min(H * 0.72, W * 0.42);
       ctx.clearRect(0, 0, W, H);
       /* 角度刻度：0°, ±45°, ±90° */
       ctx.strokeStyle = C.line; ctx.lineWidth = 1;
@@ -170,7 +170,7 @@
   })();
 
   /* =====================================================================
-     3) 主结果：按任务的点图（MeZO → GRZO，FZOO，Adam 参考线）
+     3) 主结果：竖向点图（x = 数据集，y = 准确率）；MeZO → GRZO 连线，FZOO 点，Adam 横向短线
      ===================================================================== */
   (function results() {
     var host = document.getElementById('chart-results'); if (!host) return;
@@ -184,45 +184,53 @@
                GRZO: [93.4, 78.0, 70.2, 70.4, 58.6, 57.8, 88.0, 85.2, 32.8] }
     };
     function avg(a) { return a.reduce(function (s, x) { return s + x; }, 0) / a.length; }
-    var tip = null, model = 'llama';
-    var rowH = 34, m = { l: 92, r: 70, t: 26, b: 34 }, W;
+    var model = 'llama', first = true;
 
     function render() {
-      clear(host); tip = PP.tooltip(host); W = width(host);
-      var d = D[model], rows = tasks.concat(['Average']);
+      clear(host); var tip = PP.tooltip(host);
+      var d = D[model], cols = tasks.concat(['Average']), n = cols.length;
       var get = function (k, i) { return i < tasks.length ? d[k][i] : avg(d[k]); };
+      var W = width(host), narrow = W < 620, H = narrow ? 330 : 360;
+      var m = { l: 44, r: 10, t: narrow ? 52 : 40, b: narrow ? 62 : 44 };
       var all = [].concat(d.Adam, d.MeZO, d.FZOO, d.GRZO), lo = Math.floor((Math.min.apply(null, all) - 4) / 10) * 10, hi = 100;
-      var H = m.t + rows.length * rowH + m.b;
       var s = svg('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Accuracy by task' }, host);
-      var x = function (val) { return m.l + (val - lo) / (hi - lo) * (W - m.l - m.r); };
+      var band = (W - m.l - m.r) / n;
+      var cx = function (i) { return m.l + band * (i + .5); };
+      var y = function (val) { return m.t + (hi - val) / (hi - lo) * (H - m.t - m.b); };
       for (var t = lo; t <= hi; t += 10) {
-        svg('line', { x1: x(t), x2: x(t), y1: m.t - 6, y2: H - m.b, stroke: C.soft, 'stroke-width': 1 }, s);
-        text(s, x(t), H - m.b + 20, String(t), { 'text-anchor': 'middle', 'font-size': 12, fill: C.muted });
+        svg('line', { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), stroke: C.soft, 'stroke-width': 1 }, s);
+        text(s, m.l - 8, y(t) + 4, String(t), { 'text-anchor': 'end', 'font-size': 12, fill: C.muted });
       }
-      text(s, W - m.r + 12, m.t - 8, 'Δ vs MeZO', { 'font-size': 11.5, fill: C.muted });
-      rows.forEach(function (name, i) {
-        var cy = m.t + i * rowH + rowH / 2, isAvg = name === 'Average';
-        if (isAvg) svg('line', { x1: 0, x2: W, y1: cy - rowH / 2, y2: cy - rowH / 2, stroke: C.line, 'stroke-width': 1 }, s);
-        var g = svg('g', { class: 'row' }, s);
-        svg('rect', { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: 'transparent' }, g);
-        text(g, m.l - 14, cy + 4, name, { 'text-anchor': 'end', 'font-size': 13, fill: isAvg ? C.ink : C.text, 'font-weight': isAvg ? 600 : 400 });
-        var mz = get('MeZO', i), fz = get('FZOO', i), gr = get('GRZO', i), ad = get('Adam', i);
-        svg('line', { x1: x(mz), x2: x(gr), y1: cy, y2: cy, stroke: C.ours, 'stroke-opacity': .35, 'stroke-width': 3, 'stroke-linecap': 'round' }, g);
-        svg('line', { x1: x(ad), x2: x(ad), y1: cy - 9, y2: cy + 9, stroke: C.ink, 'stroke-width': 2, 'stroke-linecap': 'round' }, g);
-        [[fz, C.fzoo, 4.5], [mz, C.mezo, 5], [gr, C.ours, 6.5]].forEach(function (p) {
-          var dot = svg('circle', { cx: x(p[0]), cy: cy, r: p[2], fill: p[1], stroke: C.surface, 'stroke-width': 2 }, g);
-          if (!PP.reduceMotion) { dot.style.transition = 'cx .6s ease'; }
-        });
-        var dlt = gr - mz;
-        text(g, W - m.r + 12, cy + 4, sgn(dlt), { 'font-size': 13, 'font-weight': 600, fill: dlt >= 0 ? C.ink : C.muted });
-        g.addEventListener('pointermove', function (e) {
+      text(s, m.l - 8, m.t - 22, 'Δ', { 'text-anchor': 'end', 'font-size': 11, fill: C.muted });
+      svg('line', { x1: m.l + band * (n - 1), x2: m.l + band * (n - 1), y1: m.t - 30, y2: H - m.b + 6, stroke: C.line, 'stroke-width': 1 }, s);
+      cols.forEach(function (name, i) {
+        var x = cx(i), isAvg = i === n - 1;
+        var mz = get('MeZO', i), fz = get('FZOO', i), gr = get('GRZO', i), ad = get('Adam', i), dlt = gr - mz;
+        var g = svg('g', {}, s);
+        svg('rect', { x: x - band / 2, y: m.t - 34, width: band, height: H - m.t - m.b + 40, fill: 'transparent' }, g);
+        text(g, x, narrow ? m.t - (i % 2 ? 14 : 30) : m.t - 22, sgn(dlt), { 'text-anchor': 'middle', 'font-size': narrow ? 11 : 12.5, 'font-weight': 600, fill: dlt >= 0 ? C.ink : C.muted });
+        var ln = svg('line', { x1: x, x2: x, y1: y(mz), y2: first && !PP.reduceMotion ? y(mz) : y(gr), stroke: C.ours, 'stroke-opacity': .35, 'stroke-width': 3, 'stroke-linecap': 'round' }, g);
+        svg('line', { x1: x - 10, x2: x + 10, y1: y(ad), y2: y(ad), stroke: C.ink, 'stroke-width': 2, 'stroke-linecap': 'round' }, g);
+        svg('circle', { cx: x, cy: y(fz), r: 4.5, fill: C.fzoo, stroke: C.surface, 'stroke-width': 2 }, g);
+        svg('circle', { cx: x, cy: y(mz), r: 5, fill: C.mezo, stroke: C.surface, 'stroke-width': 2 }, g);
+        var dot = svg('circle', { cx: x, cy: first && !PP.reduceMotion ? y(mz) : y(gr), r: 6.5, fill: C.ours, stroke: C.surface, 'stroke-width': 2 }, g);
+        if (first && !PP.reduceMotion) {
+          PP.whenVisible(host, function () {
+            ln.style.transition = dot.style.transition = 'all .8s cubic-bezier(.2,.7,.2,1) ' + (i * .05) + 's';
+            ln.setAttribute('y2', y(gr)); dot.setAttribute('cy', y(gr));
+          });
+        }
+        var lab = text(g, x, H - m.b + 18, name, { 'text-anchor': narrow ? 'end' : 'middle', 'font-size': 12, fill: isAvg ? C.ink : C.text, 'font-weight': isAvg ? 600 : 400 });
+        if (narrow) lab.setAttribute('transform', 'rotate(-40 ' + x + ' ' + (H - m.b + 18) + ')');
+        g.addEventListener('pointermove', function () {
           var r = s.getBoundingClientRect(), k = r.width / W;
-          tip.show(x(gr) * k, (cy - 10) * k, name + (model === 'llama' ? ' · Llama3-8B' : ' · OPT-13B'), [
+          tip.show(x * k, (y(Math.max(gr, ad, mz, fz)) - 10) * k, name + (model === 'llama' ? ' · Llama3-8B' : ' · OPT-13B'), [
             { color: C.ours, value: fmt(gr), label: 'GRZO' }, { color: C.fzoo, value: fmt(fz), label: 'FZOO' },
             { color: C.mezo, value: fmt(mz), label: 'MeZO' }, { color: C.ink, value: fmt(ad), label: 'Adam (FO)' }]);
         });
         g.addEventListener('pointerleave', function () { tip.hide(); });
       });
+      first = false;
       table(d);
     }
     function table(d) {
@@ -237,7 +245,138 @@
       });
       wrap.appendChild(t);
     }
-    PP.segmented(document.getElementById('seg-model'), function (val) { model = val; render(); });
+    PP.segmented(document.getElementById('seg-model'), function (val) { model = val; first = true; render(); });
+    render(); onResize(render);
+  })();
+
+  /* =====================================================================
+     3b) 收敛曲线：悬停看当前损失，以及基线追到同一损失要多花多少步/时间
+         数据从论文 Fig.（all_tasks_loss.pdf）的矢量曲线数字化而来，平滑程度与论文图一致
+     ===================================================================== */
+  (function convergence() {
+    var host = document.getElementById('chart-conv'); if (!host) return;
+    var DATA = {"multirc":{"label":"Llama3-8B \u00b7 MultiRC","x":"time","xmax":72857,"ymin":0.4,"ymax":0.75,"yticks":[0.4,0.5,0.6,0.7],"series":{"MeZO":[[4,0.6753],[1871,0.6771],[3739,0.6768],[5607,0.6786],[7475,0.6801],[9343,0.6829],[11210,0.6825],[13078,0.6817],[14946,0.6824],[16814,0.6822],[18682,0.6814],[20550,0.68],[22417,0.6808],[24285,0.6826],[26153,0.6839],[28021,0.6826],[29888,0.6808],[31756,0.6772],[33624,0.6775],[35492,0.6779],[37360,0.6765],[39228,0.6757],[41095,0.6752],[42963,0.6791],[44831,0.6846],[46699,0.6874],[48567,0.688],[50434,0.6843],[52302,0.6816],[54170,0.6798],[56038,0.6789],[57906,0.6796],[59773,0.6816],[61641,0.6827],[63509,0.6845],[65377,0.6843],[67245,0.6863],[69112,0.6856],[70980,0.6871],[72848,0.6871]],"FZOO":[[4,0.6932],[2358,0.6909],[4712,0.6878],[7066,0.6827],[9420,0.6765],[11774,0.6708],[14128,0.6663],[16482,0.6635],[18836,0.6613],[21190,0.6591],[23544,0.6565],[25898,0.6541],[28252,0.6482],[30606,0.6426],[32959,0.6343],[35313,0.6279],[37667,0.6211],[40021,0.615],[42375,0.6072],[44729,0.5985],[47083,0.5866],[49437,0.5741],[51791,0.5599],[54145,0.5475],[56499,0.5362],[58853,0.5263],[61207,0.5157],[63561,0.5046],[65915,0.4957],[68269,0.488],[70623,0.48]],"GRZO":[[4,0.6324],[2821,0.6245],[5638,0.6421],[8455,0.6424],[11272,0.6405],[14089,0.6165],[16906,0.6068],[19723,0.5991],[22540,0.5887],[25357,0.5737],[28174,0.5574],[30992,0.5409],[33809,0.5267],[36626,0.5169],[39443,0.5094],[42260,0.5019],[45077,0.4938],[47894,0.4853],[50711,0.4761],[53528,0.467],[56346,0.4595],[59163,0.4538],[61980,0.4498],[64797,0.4457],[67614,0.4433],[70431,0.4426]]}},"rte":{"label":"Llama3-8B \u00b7 RTE","x":"steps","xmax":20006,"ymin":0.4,"ymax":0.75,"yticks":[0.4,0.5,0.6,0.7],"series":{"MeZO":[[501,0.6952],[1001,0.6931],[1501,0.6914],[2001,0.6914],[2501,0.6929],[3001,0.6936],[3501,0.6916],[4001,0.6896],[4501,0.6896],[5001,0.6905],[5501,0.6925],[6001,0.6949],[6501,0.6961],[7001,0.6942],[7501,0.6923],[8001,0.6908],[8501,0.6906],[9001,0.6911],[9501,0.6913],[10001,0.6929],[10501,0.6946],[11002,0.6963],[11502,0.6957],[12002,0.6944],[12502,0.6922],[13002,0.6913],[13502,0.6905],[14002,0.6928],[14502,0.696],[15002,0.6986],[15502,0.6992],[16002,0.699],[16502,0.6972],[17002,0.6971],[17502,0.6996],[18002,0.7027],[18502,0.7061],[19002,0.7067],[19502,0.7074],[20002,0.706]],"FZOO":[[501,0.7414],[1001,0.6987],[1501,0.6833],[2001,0.6503],[2501,0.6599],[3001,0.6683],[3501,0.6714],[4001,0.6548],[4501,0.6389],[5001,0.6378],[5501,0.6373],[6001,0.6367],[6501,0.6282],[7001,0.6233],[7501,0.6184],[8001,0.6136],[8501,0.6084],[9001,0.6029],[9501,0.5971],[10001,0.5914],[10501,0.5863],[11002,0.582],[11502,0.5784],[12002,0.5748],[12502,0.5712],[13002,0.5675],[13502,0.5637],[14002,0.5599],[14502,0.5558],[15002,0.5514],[15502,0.5467],[16002,0.542],[16502,0.5371],[17002,0.5321],[17502,0.527],[18002,0.5218],[18502,0.5174],[19002,0.5138],[19502,0.5111],[20002,0.5083]],"GRZO":[[501,0.6917],[1001,0.6895],[1501,0.6877],[2001,0.6832],[2501,0.6786],[3001,0.6729],[3501,0.6677],[4001,0.6626],[4501,0.6581],[5001,0.6533],[5501,0.6489],[6001,0.6453],[6501,0.6415],[7001,0.6378],[7501,0.6344],[8001,0.6316],[8501,0.629],[9001,0.6252],[9501,0.6206],[10001,0.616],[10501,0.6127],[11002,0.6085],[11502,0.6031],[12002,0.5956],[12502,0.5878],[13002,0.5813],[13502,0.5733],[14002,0.5663],[14502,0.5576],[15002,0.5474],[15502,0.5354],[16002,0.5235],[16502,0.5099],[17002,0.4951],[17502,0.4806],[18002,0.4718],[18502,0.4644],[19002,0.4565],[19502,0.4481],[20002,0.4426]]}},"drop":{"label":"OPT-13B \u00b7 DROP","x":"time","xmax":30250,"ymin":1.0,"ymax":6.0,"yticks":[2.0,3.0,4.0,5.0,6.0],"series":{"MeZO":[[2,4.0695],[777,4.0695],[1552,4.0695],[2328,4.0695],[3103,3.9969],[3879,3.8518],[4654,3.6342],[5430,3.4165],[6205,3.2549],[6980,3.1495],[7756,3.1001],[8531,3.0507],[9307,3.0242],[10082,3.0206],[10857,3.0398],[11633,3.059],[12408,3.2586],[13184,3.6386],[13959,4.199],[14734,4.7594],[15510,5.393],[16285,6.0998],[17061,6.8798],[17836,7.6598],[18121,7.8762]],"FZOO":[[2,2.2681],[1386,2.2681],[2771,2.2681],[4156,2.2681],[5540,2.2288],[6925,2.1502],[8310,2.0323],[9694,1.9144],[11079,1.8278],[12464,1.7725],[13848,1.7485],[15233,1.7245],[16618,1.7043],[18002,1.6879],[19387,1.6752],[20772,1.6625],[22156,1.6548],[23541,1.6518],[24926,1.6538],[26310,1.6558],[27695,1.6565],[29080,1.6559]],"GRZO":[[2,2.6886],[998,2.4664],[1995,2.3296],[2992,2.0826],[3989,1.9651],[4986,1.8981],[5983,1.8589],[6980,1.8328],[7977,1.8106],[8974,1.7934],[9971,1.773],[10968,1.7591],[11965,1.7435],[12962,1.7315],[13959,1.7159],[14956,1.7025],[15953,1.6896],[16950,1.6802],[17947,1.6718],[18944,1.6617],[19941,1.6488],[20938,1.6371],[21935,1.6267],[22932,1.6185],[23929,1.6089],[24926,1.5992],[25923,1.5928],[26920,1.5851],[27917,1.5804],[28914,1.5742],[29911,1.5676]]}},"squad":{"label":"OPT-13B \u00b7 SQuAD","x":"steps","xmax":20008,"ymin":0.3,"ymax":1.05,"yticks":[0.4,0.6,0.8,1.0],"series":{"MeZO":[[501,0.9218],[1001,0.9229],[1501,0.9264],[2001,0.9296],[2501,0.9215],[3001,0.9009],[3501,0.8814],[4001,0.8709],[4501,0.8678],[5001,0.8599],[5501,0.8536],[6001,0.8502],[6501,0.8526],[7001,0.855],[7501,0.8563],[8001,0.8527],[8501,0.8482],[9001,0.8411],[9501,0.8402],[10001,0.8373],[10501,0.8373],[11002,0.8348],[11502,0.8354],[12002,0.8324],[12502,0.8303],[13002,0.8256],[13502,0.8228],[14002,0.8194],[14502,0.8202],[15002,0.8206],[15502,0.8177],[16002,0.8123],[16502,0.8058],[17002,0.8039],[17502,0.8068],[18002,0.8187],[18502,0.83],[19002,0.8474],[19502,0.8607],[20002,0.8683]],"FZOO":[[501,0.8806],[1001,0.8806],[1501,0.8806],[2001,0.8806],[2501,0.8666],[3001,0.8387],[3501,0.7967],[4001,0.7548],[4501,0.718],[5001,0.6864],[5501,0.66],[6001,0.6337],[6501,0.6112],[7001,0.5928],[7501,0.5782],[8001,0.5637],[8501,0.5506],[9001,0.5389],[9501,0.5286],[10001,0.5183],[10501,0.5095],[11002,0.5022],[11502,0.4964],[12002,0.4907],[12502,0.4853],[13002,0.4803],[13502,0.4756],[14002,0.471],[14502,0.4667],[15002,0.4627],[15502,0.4589],[16002,0.4551],[16502,0.452],[17002,0.4494],[17502,0.4475],[18002,0.4457],[18502,0.4436],[19002,0.4414],[19502,0.4391],[20002,0.4367]],"GRZO":[[501,1.1371],[1501,0.7302],[2501,0.5815],[3501,0.5102],[4501,0.4736],[5501,0.4535],[6501,0.4419],[7501,0.426],[8501,0.419],[9501,0.414],[10501,0.4117],[11502,0.4083],[12502,0.4079],[13502,0.4097],[14502,0.4121],[15502,0.4046],[16502,0.4084],[17502,0.4022],[18502,0.4023],[19502,0.403]]}}};
+    var NAMES = ['GRZO', 'FZOO', 'MeZO'], COL = { GRZO: C.ours, FZOO: C.fzoo, MeZO: C.mezo };
+    var key = 'rte', cursorX = null;
+    var read = document.getElementById('conv-read'), summary = document.getElementById('conv-summary');
+
+    function at(p, x) {
+      if (x < p[0][0] || x > p[p.length - 1][0]) return null;
+      for (var i = 1; i < p.length; i++) if (p[i][0] >= x) {
+        var a = p[i - 1], b = p[i], t = b[0] === a[0] ? 0 : (x - a[0]) / (b[0] - a[0]);
+        return a[1] + t * (b[1] - a[1]);
+      }
+      return null;
+    }
+    function reach(p, L) {
+      for (var i = 0; i < p.length; i++) if (p[i][1] <= L) {
+        if (i === 0) return p[0][0];
+        var a = p[i - 1], b = p[i];
+        return a[0] + (L - a[1]) * (b[0] - a[0]) / (b[1] - a[1]);
+      }
+      return null;
+    }
+    function best(p) { return Math.min.apply(null, p.map(function (q) { return q[1]; })); }
+    function fx(v, d) {
+      if (d.x === 'steps') return (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : Math.round(v)) + ' steps';
+      return (v / 3600).toFixed(1) + ' h';
+    }
+    function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
+
+    function renderSummary(d) {
+      clear(summary);
+      var S = d.series, Lf = best(S.FZOO), xf = reach(S.FZOO, Lf), xg = reach(S.GRZO, Lf);
+      var b = el('b', null, 'GRZO reaches FZOO’s best loss (' + Lf.toFixed(3) + ') ' + (xf / xg).toFixed(1) + '× sooner');
+      summary.appendChild(b);
+      summary.appendChild(document.createTextNode(' — ' + fx(xg, d) + ' vs ' + fx(xf, d) + '. MeZO bottoms out at ' + best(S.MeZO).toFixed(2) + ' in this window.'));
+      return xg;
+    }
+
+    function render() {
+      clear(host);
+      var d = DATA[key], S = d.series;
+      var W = width(host, 720), H = W < 560 ? 260 : 320, m = { l: 46, r: 14, t: 14, b: 40 };
+      var s = svg('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': d.label + ' training loss' }, host);
+      var X = function (v) { return m.l + v / d.xmax * (W - m.l - m.r); };
+      var Y = function (v) { return m.t + (d.ymax - v) / (d.ymax - d.ymin) * (H - m.t - m.b); };
+      var invX = function (px) { return (px - m.l) / (W - m.l - m.r) * d.xmax; };
+      d.yticks.forEach(function (t) {
+        svg('line', { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t), stroke: C.soft, 'stroke-width': 1 }, s);
+        text(s, m.l - 8, Y(t) + 4, String(t), { 'text-anchor': 'end', 'font-size': 11.5, fill: C.muted });
+      });
+      var hrs = d.xmax / 3600, step = d.x === 'steps' ? 5000 : 3600 * (hrs <= 10 ? 2 : hrs <= 30 ? 5 : 10), lim = d.xmax;
+      for (var t = 0; t <= lim + 1; t += step) {
+        text(s, X(t), H - m.b + 18, d.x === 'steps' ? (t ? (t / 1000) + 'k' : '0') : String(Math.round(t / 3600)), { 'text-anchor': 'middle', 'font-size': 11.5, fill: C.muted });
+      }
+      text(s, (m.l + W - m.r) / 2, H - 6, d.x === 'steps' ? 'training steps' : 'wall-clock time (h)', { 'text-anchor': 'middle', 'font-size': 11.5, fill: C.muted });
+      text(s, 12, (m.t + H - m.b) / 2, 'training loss', { 'text-anchor': 'middle', 'font-size': 11.5, fill: C.muted, transform: 'rotate(-90 12 ' + ((m.t + H - m.b) / 2) + ')' });
+      var cid = 'clip-' + key;
+      var cp = svg('clipPath', { id: cid }, svg('defs', {}, s));
+      svg('rect', { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b }, cp);
+      var plot = svg('g', { 'clip-path': 'url(#' + cid + ')' }, s);
+      ['MeZO', 'FZOO', 'GRZO'].forEach(function (n) {
+        var dd = S[n].map(function (q, i) { return (i ? 'L' : 'M') + X(q[0]).toFixed(1) + ',' + Y(q[1]).toFixed(1); }).join('');
+        svg('path', { d: dd, fill: 'none', stroke: COL[n], 'stroke-width': n === 'GRZO' ? 2.6 : 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }, plot);
+      });
+      /* 光标层 */
+      var cur = svg('g', {}, s);
+      var vline = svg('line', { y1: m.t, y2: H - m.b, stroke: C.ink, 'stroke-width': 1, 'stroke-opacity': .5 }, cur);
+      var hline = svg('line', { x1: m.l, x2: W - m.r, stroke: C.ours, 'stroke-width': 1, 'stroke-dasharray': '4 4' }, cur);
+      var marks = {};
+      NAMES.forEach(function (n) {
+        marks[n] = { drop: svg('line', { stroke: COL[n], 'stroke-width': 1, 'stroke-dasharray': '2 3' }, cur),
+                     dot: svg('circle', { r: n === 'GRZO' ? 6 : 5, fill: n === 'GRZO' ? COL[n] : C.surface, stroke: COL[n], 'stroke-width': n === 'GRZO' ? 2 : 2.2 }, cur) };
+      });
+
+      function update(xv) {
+        xv = Math.max(0, Math.min(d.xmax, xv)); cursorX = xv;
+        var L = at(S.GRZO, xv);
+        vline.setAttribute('x1', X(xv)); vline.setAttribute('x2', X(xv));
+        clear(read);
+        read.appendChild(el('p', 'pp-conv__at', 'At ' + fx(xv, d)));
+        var lossList = el('div', 'pp-conv__rows');
+        NAMES.forEach(function (n) {
+          var v = at(S[n], xv), row = el('div', 'pp-conv__row');
+          var k = el('i'); k.style.background = COL[n]; row.appendChild(k);
+          row.appendChild(el('span', null, n));
+          row.appendChild(el('b', null, v === null ? '—' : v.toFixed(3)));
+          lossList.appendChild(row);
+        });
+        read.appendChild(el('span', 'pp-conv__k', 'Training loss')); read.appendChild(lossList);
+        if (L === null) { hline.setAttribute('opacity', 0); NAMES.forEach(function (n) { marks[n].dot.setAttribute('opacity', 0); marks[n].drop.setAttribute('opacity', 0); }); return; }
+        hline.setAttribute('y1', Y(L)); hline.setAttribute('y2', Y(L)); hline.setAttribute('opacity', 1);
+        read.appendChild(el('span', 'pp-conv__k', 'Time to reach GRZO’s loss ' + L.toFixed(3)));
+        var reachList = el('div', 'pp-conv__rows');
+        NAMES.forEach(function (n) {
+          var xr = n === 'GRZO' ? xv : reach(S[n], L), row = el('div', 'pp-conv__row'), mk = marks[n];
+          var k = el('i'); k.style.background = COL[n]; row.appendChild(k);
+          row.appendChild(el('span', null, n));
+          if (xr === null || xr > d.xmax) {
+            row.appendChild(el('b', 'dim', 'not reached'));
+            mk.dot.setAttribute('opacity', 0); mk.drop.setAttribute('opacity', 0);
+          } else {
+            var txt = fx(xr, d);
+            if (n !== 'GRZO' && xv > d.xmax * 0.04) {
+              var ratio = xr / xv; txt += '  ·  ' + ratio.toFixed(1) + '×';
+            }
+            row.appendChild(el('b', null, txt));
+            mk.dot.setAttribute('cx', X(xr)); mk.dot.setAttribute('cy', Y(L)); mk.dot.setAttribute('opacity', 1);
+            mk.drop.setAttribute('x1', X(xr)); mk.drop.setAttribute('x2', X(xr)); mk.drop.setAttribute('y1', Y(L)); mk.drop.setAttribute('y2', H - m.b);
+            mk.drop.setAttribute('opacity', n === 'GRZO' ? 0 : .8);
+          }
+          reachList.appendChild(row);
+        });
+        read.appendChild(reachList);
+        read.appendChild(el('p', 'pp-conv__note', '× = how many times longer the baseline needs to get as low as GRZO is at the cursor.'));
+      }
+      var hit = svg('rect', { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: 'transparent', style: 'cursor:crosshair;touch-action:pan-y' }, s);
+      function fromEvt(e) { var r = s.getBoundingClientRect(); return invX((e.clientX - r.left) / r.width * W); }
+      hit.addEventListener('pointermove', function (e) { update(fromEvt(e)); });
+      hit.addEventListener('pointerdown', function (e) { update(fromEvt(e)); });
+      var x0 = renderSummary(d);
+      update(cursorX === null ? x0 : cursorX);
+    }
+    PP.segmented(document.getElementById('seg-conv'), function (k) { key = k; cursorX = null; render(); });
     render(); onResize(render);
   })();
 
@@ -315,7 +454,7 @@
   })();
 
   /* =====================================================================
-     5) Drop-in：变体（原版）→ 变体（GRZO 核心）的哑铃图
+     5) Drop-in：竖向哑铃图（x = 任务，y = 准确率），变体原版 → 换上 GRZO 核心
      ===================================================================== */
   (function dropin() {
     var host = document.getElementById('chart-dropin'); if (!host) return;
@@ -325,48 +464,50 @@
       lozo:   { base: 'LOZO', ours: 'LO-GRZO', b: [79.4, 72.1, 84.0, 89.0, 65.4], g: [84.4, 75.1, 90.0, 88.4, 65.5] },
       quant:  { base: 'QuZO (int8)', ours: 'Qu-GRZO (int8)', b: [76.8, 75.2, 87.0, 80.6, 52.3], g: [79.3, 80.5, 91.0, 88.6, 63.9] }
     };
-    var legend = document.getElementById('legend-dropin');
+    var legend = document.getElementById('legend-dropin'), curV = 'sparse', first = true;
     function avg(a) { return a.reduce(function (s, x) { return s + x; }, 0) / a.length; }
-    function render(key) {
-      clear(host); var tip = PP.tooltip(host), d = V[key];
+    function render() {
+      clear(host); var tip = PP.tooltip(host), d = V[curV];
       clear(legend);
       [[C.mezo, d.base], [C.ours, d.ours]].forEach(function (l) { var sp = document.createElement('span'); var ic = document.createElement('i'); ic.style.background = l[0]; sp.appendChild(ic); sp.appendChild(document.createTextNode(l[1])); legend.appendChild(sp); });
       var sp = document.createElement('span'); var ic = document.createElement('i'); ic.style.cssText = 'background:transparent;box-shadow:inset 0 0 0 1.5px ' + C.ink; sp.appendChild(ic); sp.appendChild(document.createTextNode('vanilla GRZO')); legend.appendChild(sp);
 
-      var rows = tasks.concat(['Average']), W = width(host), rowH = 38, m = { l: 92, r: 70, t: 26, b: 34 }, lo = 40, hi = 95;
-      var H = m.t + rows.length * rowH + m.b;
+      var cols = tasks.concat(['Average']), n = cols.length;
+      var W = width(host, 760), H = W < 560 ? 300 : 330, m = { l: 44, r: 10, t: 40, b: 40 }, lo = 40, hi = 95;
       var s = svg('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img', 'aria-label': 'Variant before and after swapping in the GRZO core' }, host);
-      var x = function (val) { return m.l + (val - lo) / (hi - lo) * (W - m.l - m.r); };
+      var band = (W - m.l - m.r) / n, cx = function (i) { return m.l + band * (i + .5); };
+      var y = function (val) { return m.t + (hi - val) / (hi - lo) * (H - m.t - m.b); };
       for (var t = 40; t <= 90; t += 10) {
-        svg('line', { x1: x(t), x2: x(t), y1: m.t - 6, y2: H - m.b, stroke: C.soft, 'stroke-width': 1 }, s);
-        text(s, x(t), H - m.b + 20, String(t), { 'text-anchor': 'middle', 'font-size': 12, fill: C.muted });
+        svg('line', { x1: m.l, x2: W - m.r, y1: y(t), y2: y(t), stroke: C.soft, 'stroke-width': 1 }, s);
+        text(s, m.l - 8, y(t) + 4, String(t), { 'text-anchor': 'end', 'font-size': 12, fill: C.muted });
       }
-      text(s, W - m.r + 12, m.t - 8, 'Δ', { 'font-size': 11.5, fill: C.muted });
-      rows.forEach(function (name, i) {
-        var isAvg = i === tasks.length, cy = m.t + i * rowH + rowH / 2;
+      text(s, m.l - 8, m.t - 22, 'Δ', { 'text-anchor': 'end', 'font-size': 11, fill: C.muted });
+      svg('line', { x1: m.l + band * (n - 1), x2: m.l + band * (n - 1), y1: m.t - 30, y2: H - m.b + 6, stroke: C.line, 'stroke-width': 1 }, s);
+      cols.forEach(function (name, i) {
+        var isAvg = i === n - 1, x = cx(i);
         var b = isAvg ? avg(d.b) : d.b[i], g = isAvg ? avg(d.g) : d.g[i], va = isAvg ? avg(vanilla) : vanilla[i];
-        if (isAvg) svg('line', { x1: 0, x2: W, y1: cy - rowH / 2, y2: cy - rowH / 2, stroke: C.line, 'stroke-width': 1 }, s);
         var gg = svg('g', {}, s);
-        svg('rect', { x: 0, y: cy - rowH / 2, width: W, height: rowH, fill: 'transparent' }, gg);
-        text(gg, m.l - 14, cy + 4, name, { 'text-anchor': 'end', 'font-size': 13, fill: isAvg ? C.ink : C.text, 'font-weight': isAvg ? 600 : 400 });
-        svg('circle', { cx: x(va), cy: cy, r: 6, fill: 'none', stroke: C.ink, 'stroke-width': 1.5, 'stroke-opacity': .55 }, gg);
-        var ln = svg('line', { x1: x(b), x2: PP.reduceMotion ? x(g) : x(b), y1: cy, y2: cy, stroke: g >= b ? C.ours : C.muted, 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-opacity': .55 }, gg);
-        svg('circle', { cx: x(b), cy: cy, r: 5.5, fill: C.mezo, stroke: C.surface, 'stroke-width': 2 }, gg);
-        var dot = svg('circle', { cx: PP.reduceMotion ? x(g) : x(b), cy: cy, r: 6.5, fill: C.ours, stroke: C.surface, 'stroke-width': 2 }, gg);
-        if (!PP.reduceMotion) {
-          ln.style.transition = 'all .7s ease ' + (i * .06) + 's'; dot.style.transition = 'all .7s ease ' + (i * .06) + 's';
-          requestAnimationFrame(function () { requestAnimationFrame(function () { ln.setAttribute('x2', x(g)); dot.setAttribute('cx', x(g)); }); });
+        svg('rect', { x: x - band / 2, y: m.t - 34, width: band, height: H - m.t - m.b + 40, fill: 'transparent' }, gg);
+        text(gg, x, m.t - 22, sgn(g - b), { 'text-anchor': 'middle', 'font-size': 12.5, 'font-weight': 600, fill: g >= b ? C.ink : C.muted });
+        svg('circle', { cx: x + 14, cy: y(va), r: 5.5, fill: 'none', stroke: C.ink, 'stroke-width': 1.5, 'stroke-opacity': .5 }, gg);
+        var anim = !PP.reduceMotion;
+        var ln = svg('line', { x1: x, x2: x, y1: y(b), y2: anim ? y(b) : y(g), stroke: g >= b ? C.ours : C.muted, 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-opacity': .5 }, gg);
+        svg('circle', { cx: x, cy: y(b), r: 5.5, fill: C.mezo, stroke: C.surface, 'stroke-width': 2 }, gg);
+        var dot = svg('circle', { cx: x, cy: anim ? y(b) : y(g), r: 6.5, fill: C.ours, stroke: C.surface, 'stroke-width': 2 }, gg);
+        if (anim) {
+          var go = function () { ln.style.transition = dot.style.transition = 'all .8s cubic-bezier(.2,.7,.2,1) ' + (i * .06) + 's'; ln.setAttribute('y2', y(g)); dot.setAttribute('cy', y(g)); };
+          if (first) PP.whenVisible(host, go); else requestAnimationFrame(function () { requestAnimationFrame(go); });
         }
-        text(gg, W - m.r + 12, cy + 4, sgn(g - b), { 'font-size': 13, 'font-weight': 600, fill: g >= b ? C.ink : C.muted });
+        text(gg, x, H - m.b + 20, name, { 'text-anchor': 'middle', 'font-size': 12, fill: isAvg ? C.ink : C.text, 'font-weight': isAvg ? 600 : 400 });
         gg.addEventListener('pointermove', function () {
           var r = s.getBoundingClientRect(), k = r.width / W;
-          tip.show(x(g) * k, (cy - 10) * k, name, [{ color: C.ours, value: fmt(g), label: d.ours }, { color: C.mezo, value: fmt(b), label: d.base }, { color: C.ink, value: fmt(va), label: 'vanilla GRZO' }]);
+          tip.show(x * k, (y(Math.max(b, g, va)) - 12) * k, name, [{ color: C.ours, value: fmt(g), label: d.ours }, { color: C.mezo, value: fmt(b), label: d.base }, { color: C.ink, value: fmt(va), label: 'vanilla GRZO' }]);
         });
         gg.addEventListener('pointerleave', function () { tip.hide(); });
       });
+      first = false;
     }
-    var curV = 'sparse';
-    PP.segmented(document.getElementById('seg-var'), function (k) { curV = k; render(k); });
-    render(curV); onResize(function () { render(curV); });
+    PP.segmented(document.getElementById('seg-var'), function (k) { curV = k; render(); });
+    render(); onResize(render);
   })();
 })();
