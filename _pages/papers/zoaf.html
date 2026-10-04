@@ -1,0 +1,243 @@
+---
+layout: project
+permalink: /papers/zoaf/
+title: "ZOAF: Towards Efficient Zeroth-Order Optimization for Analog/RF Circuit Design"
+description: "ZOAF recovers descent directions for analog/RF circuit sizing straight from a handful of black-box simulations, with no surrogate model: best median value on every reported figure of merit and 1.3–3.8× fewer simulator calls to convergence."
+paper:
+  short: ZOAF
+  short_html: "<em>ZO</em>AF"
+  subtitle: "Towards Efficient Zeroth-Order Optimization for Analog/RF Circuit Design"
+  tagline: "Descent directions straight from the simulator. No surrogate, no adjoint."
+  authors:
+    - Liyan Tan
+    - Yequan Zhao
+    - Jinming Lu
+    - Ben F. Jamroz
+    - Ari Feldman
+    - Zheng Zhang
+  author_aff: [1, 1, 1, 2, 2, 1]
+  affiliations:
+    - University of California, Santa Barbara
+    - National Institute of Standards and Technology, Boulder
+  venue: "Under review"
+  venue_meta: "arXiv preprint"
+  year: 2026
+  date: "2026-06-01"
+  arxiv: "2606.02869"
+  doi: "10.48550/arXiv.2606.02869"
+  code: "https://github.com/LiyanTan111/ZOAF"
+  og_image: /images/papers/zoaf-method.png
+  tldr: "Analog/RF circuit optimizers usually have to choose between expensive surrogate models and slow evolutionary search. ZOAF instead recovers descent directions straight from a handful of black-box simulations, reaching convergence with 1.3–3.8× fewer simulator calls."
+  figures:
+    - src: /images/papers/zoaf-method.png
+      kind: method
+      alt: "Multi-start clipped zeroth-order optimizer illustrated on a multimodal landscape"
+  stats:
+    - value: "1.3–3.8×"
+      label: "fewer simulator calls to match each baseline's final median"
+    - value: "5.7×"
+      label: "lower median peaking than the best baseline (22-parameter amplifier)"
+    - value: "180×"
+      label: "higher gain–bandwidth product than CMA-ES on the three-stage op-amp"
+    - value: "−57.7 dB"
+      label: "mean return loss over 10 runs on the RF matching network"
+  nav:
+    - id: overview
+      label: Overview
+    - id: method
+      label: Method
+    - id: playground
+      label: Playground
+    - id: amplifier
+      label: 22-param amp
+    - id: opamp
+      label: Op-amp
+    - id: rf
+      label: RF match
+    - id: faq
+      label: FAQ
+    - id: cite
+      label: Cite
+  scripts:
+    - /assets/js/zoaf.js
+  faq:
+    - q: "What problem does ZOAF solve?"
+      a: "Optimizing analog and RF circuit parameters when the simulator is a black box, so gradients are unavailable and every evaluation is expensive."
+    - q: "Why not just use gradient-based optimization?"
+      a: "Classical gradient-based methods need access to simulator internals or an adjoint implementation. Commercial analog/RF simulators expose neither, so the gradient simply is not available."
+    - q: "How does ZOAF differ from Bayesian optimization, CMA-ES, or other black-box baselines?"
+      a: "Surrogate methods such as TuRBO, AutoCkt and DNN-Opt fit a model of the circuit response and optimize that model, which is expensive to build and sensitive to hyperparameters. Population heuristics such as CMA-ES, DE and PSO need many evaluations. ZOAF is surrogate-free: it estimates descent directions directly from a small number of simulations and takes gradient-style steps, converging with 1.3–3.8× fewer simulator calls."
+    - q: "What are the three main components?"
+      a: "A hybrid ZO schedule that switches between random-direction ZO for budget-efficient exploration and coordinate-wise ZO for accurate late-stage refinement; one-shot quasi-random multi-start to focus the evaluation budget; and a sliding-window monitor that triggers early stops and box-projected updates to keep parameters within feasible ranges."
+    - q: "What circuits was it evaluated on, and does it need simulator source code?"
+      a: "Three distinct schematics, including a 22-parameter two-stage cascaded amplifier where ZOAF shows up to an order-of-magnitude advantage in median peaking. It needs no source code — the simulator is treated strictly as a black box mapping design parameters to a figure of merit."
+    - q: "What comes next?"
+      a: "Extending the framework toward uncertainty-aware design: stochastic zeroth-order optimization to handle process variations in nanoscale circuits, and distributionally robust circuit optimization that accounts for distribution shift in those variations."
+  abstract: >-
+    Circuit optimization is an indispensable step in analog/RF IC design. Classical fast gradient-based optimization methods are typically infeasible due to lack of access to simulator source code and the technical barriers to implementing adjoint methods. Therefore, surrogate-based black-box optimization is widely used in practice; however, it can be costly to build and sensitive to hyperparameters, whereas population heuristics often suffer from slow convergence and large evaluation counts under tight simulator-call budgets. To address these limitations, we propose the Zeroth-Order Analog/RF Framework (ZOAF), which recovers gradient-descent directions from a small number of black-box circuit simulations, combining the benefits of both gradient-based optimization and black-box optimization. We also employ several surrogate-free techniques to improve the efficiency and accuracy, including (1) a hybrid ZO scheduling method that switches between random-direction ZO for budget-efficient exploration and coordinate-wise ZO for accurate late-stage refinement, (2) one-shot quasi-random multi-start to focus evaluations, and (3) a sliding-window monitor that triggers early stops and box-projected updates to maintain feasibility. Evaluated on three distinct schematics, ZOAF consistently outperforms state-of-the-art baselines, achieving the best median final value on every reported figure of merit — with up to an order-of-magnitude advantage in median peaking on the 22-parameter two-stage amplifier — together with the most robust worst-case behavior across seeds, while reducing simulator calls to convergence by 1.3–3.8×.
+  bibtex: |
+    @article{tan2026zoaf,
+      title   = {ZOAF: Towards Efficient Zeroth-Order Optimization for Analog/RF Circuit Design},
+      author  = {Tan, Liyan and Zhao, Yequan and Lu, Jinming and Jamroz, Ben F. and Feldman, Ari and Zhang, Zheng},
+      journal = {arXiv preprint arXiv:2606.02869},
+      year    = {2026}
+    }
+---
+<section class="pp-section" id="overview">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Overview</p>
+    <h2 class="pp-h2 reveal">Gradient-style search for a simulator that gives no gradients.</h2>
+    <p class="pp-lead reveal">Sizing an analog/RF circuit means tuning resistors, capacitors, device sizes and biases until gain, bandwidth, ripple or return loss meet their targets. Every candidate costs a SPICE or EM simulation, and commercial simulators expose no gradients, so adjoint-based optimization is off the table.</p>
+    <p class="reveal">The usual answers each pay a price. Surrogate-based Bayesian optimization has to fit and tune a model of the circuit response; population heuristics such as CMA-ES, DE and PSO burn through the simulator budget. <strong>ZOAF</strong> takes a third route: it estimates descent directions from a handful of <strong>paired black-box simulations</strong> and takes gradient-style steps, with no surrogate and no simulator hooks.</p>
+    <div class="pp-tldr reveal"><b>TL;DR</b><p>Across an RF matching network and two amplifiers under equal simulator-call budgets, ZOAF reaches the <strong>best median final value on every reported figure of merit</strong>, has the most robust worst case across seeds, and matches each baseline's final median with <strong>1.3&ndash;3.8&times; fewer simulator calls</strong>.</p></div>
+    <figure class="pp-figure reveal">
+      <img src="{{ site.baseurl }}/images/papers/zoaf-method.png" alt="Multi-start clipped zeroth-order optimizer illustrated on a multimodal landscape">
+      <figcaption><strong>The multi-start clipped ZO optimizer.</strong> A one-shot quasi-random pool places a handful of candidates on a rugged objective; each step estimates a descent direction from a few black-box probes, and box-projected updates carry the surviving start to the optimum while a poor start is stopped early.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="method">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Method</p>
+    <h2 class="pp-h2 reveal">Coarse random directions, then fine coordinates.</h2>
+    <p class="pp-lead reveal">Each query runs the simulator at a design vector \(x\) inside its box \([\ell, u]\). ZOAF turns symmetric two-point probes into a gradient estimate, and chooses how to spend probes depending on how close the search is to a good basin.</p>
+    <div class="pp-cards">
+      <div class="pp-card reveal"><span class="pp-card__num">1</span><h3>Hybrid RGE &rarr; CGE</h3><p>Random-direction estimation (RGE) costs \(2N\) calls per step and finds a promising basin cheaply. When progress slows, ZOAF switches to coordinate-wise estimation (CGE): \(2d\) calls, but low-variance and accurate for late-stage refinement.</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">2</span><h3>One-shot multi-start</h3><p>A single quasi-random pool (Sobol / LHS) is drawn and evaluated once, counted toward the budget. Restarts reuse it with a rank-based schedule: top designs first, lower ranks later for exploration.</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">3</span><h3>Sliding-window monitor</h3><p>Over the last \(W = 8\) steps it tracks improvement, gradient norm and trend. A soft stall shrinks the step and widens the probe; a hard stall ends the stage and restarts from the pool. Every probe and update is clipped to the box.</p></div>
+    </div>
+    <div class="pp-math reveal">
+      $$\hat g_{\text{RGE}} = \frac{1}{2\mu N}\sum_{k=1}^{N}\bigl(f(x+\mu u_k) - f(x-\mu u_k)\bigr)\,u_k, \qquad \hat g_{\text{CGE}}[i] = \frac{f(x+\mu e_i) - f(x-\mu e_i)}{2\mu}$$
+    </div>
+    <div class="pp-math reveal">
+      $$x_{\text{cand}} = \operatorname{clip}\bigl(x + \eta\,\hat g,\ \ell,\ u\bigr), \qquad x \leftarrow x_{\text{cand}}\ \text{ only if } f(x_{\text{cand}}) > f(x)$$
+    </div>
+    <p class="pp-caption reveal">The RGE estimator is unbiased for the Gaussian-smoothed gradient, with smoothing bias \(O(L\mu\sqrt d)\) but mean-square error growing as \(O(d^2/N)\). That variance is what stalls RGE near an optimum, and what the switch to the deterministic, coordinate-wise CGE removes.</p>
+  </div>
+</section>
+
+<section class="pp-section" id="playground">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Playground</p>
+    <h2 class="pp-h2 reveal">Watch the search spend its budget.</h2>
+    <p class="pp-lead reveal">A two-parameter toy with a broad trap basin and a narrow, deeper optimum. ZOAF spends a few calls on a quasi-random pool, descends with cheap random-direction steps, refines with coordinate steps, and restarts when a stage stalls. Compare it with a run that never restarts, and with plain random sampling under the same budget.</p>
+    <div class="pp-widget reveal" id="w-play">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">ZOAF on a rugged landscape <span class="pp-tag">Toy simulation</span></p>
+          <p class="pp-widget__sub">Darker is better (lower objective). Squares are the quasi-random pool, white dots are probes, paths are accepted steps, rings mark restarts. An illustration of the algorithm, not experimental data.</p>
+        </div>
+        <div class="pp-seg" id="seg-play" role="group" aria-label="Variant">
+          <button type="button" data-value="zoaf" aria-pressed="true">ZOAF</button>
+          <button type="button" data-value="single" aria-pressed="false">No restarts</button>
+          <button type="button" data-value="random" aria-pressed="false">Random search</button>
+        </div>
+      </div>
+      <div class="pp-play">
+        <div class="pp-play__map"><canvas id="play-map" width="560" height="560" aria-label="Optimization trajectories on a two-dimensional landscape"></canvas></div>
+        <div class="pp-play__side">
+          <div class="pp-range"><label for="play-b">Budget</label><input type="range" id="play-b" min="40" max="160" step="10" value="100"><output id="play-b-out">100</output></div>
+          <div class="pp-toy__stats">
+            <div class="pp-toy__stat"><span>Simulator calls</span><b id="play-evals">0</b></div>
+            <div class="pp-toy__stat"><span>Current phase</span><b id="play-phase">&ndash;</b></div>
+            <div class="pp-toy__stat is-ours"><span>Best value</span><b id="play-best">&ndash;</b></div>
+          </div>
+          <div><p class="pp-panel__label" style="margin:0 0 .3rem"><b>Best so far</b><span>lower is better</span></p><div class="pp-chart" id="chart-play"></div></div>
+          <div class="pp-play__btns"><button type="button" class="pp-btn pp-btn--sm" id="play-replay">Replay</button><button type="button" class="pp-btn pp-btn--sm" id="play-seed">New landscape</button></div>
+        </div>
+      </div>
+      <div class="pp-legend"><span><i style="background:#f3c88f"></i>RGE step</span><span><i style="background:#d9772e"></i>CGE step</span><span><i class="sq" style="background:#fff;box-shadow:inset 0 0 0 1.5px var(--ink)"></i>pool point</span><span><i style="background:#cf8c4a"></i>best found (star)</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="amplifier">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">22-parameter amplifier</p>
+    <h2 class="pp-h2 reveal">Ahead early, and still ahead at the end.</h2>
+    <p class="pp-lead reveal">A two-stage cascaded signal-conditioning amplifier with 22 tunable components, three figures of merit to minimize, a 100-call budget and <strong>100 random seeds per method</strong>. ZOAF has the best median on all three; on peaking its median is <strong>5.7&times;</strong> lower than the best baseline.</p>
+    <div class="pp-widget reveal" id="w-conv">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Best-so-far convergence: hover to compare</p>
+          <p class="pp-widget__sub">Median over 100 seeds (lines) and inter-quartile range (band), log scale, lower is better. Pick a baseline on the right to highlight it; the ring marks where ZOAF's median first matches that baseline's 100-call median.</p>
+        </div>
+        <div class="pp-seg" id="seg-fom" role="group" aria-label="Figure of merit">
+          <button type="button" data-value="peaking" aria-pressed="true">Peaking</button>
+          <button type="button" data-value="ripple" aria-pressed="false">Ripple</button>
+          <button type="button" data-value="overshoot" aria-pressed="false">Overshoot</button>
+        </div>
+      </div>
+      <p class="pp-conv__summary" id="conv-summary"></p>
+      <div class="pp-conv pp-conv--wide">
+        <div><div class="pp-chart" id="chart-conv"></div>
+          <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>ZOAF</span><span><i style="background:var(--s-mezo)"></i><span id="conv-sel-name">selected baseline</span></span><span><i style="background:#b9c2cf"></i>other baselines</span></div></div>
+        <div class="pp-conv__read" id="conv-read" aria-live="polite"></div>
+      </div>
+      <p class="pp-caption">Curves digitized from the paper&rsquo;s vector figures; final medians agree with Tables&nbsp;III&ndash;V to three digits. DNN-Opt samples randomly for 99 calls and evaluates one recommended design at call 100, so its trace is a step and no speed-up is quoted against it.</p>
+    </div>
+
+    <div class="pp-widget reveal" id="w-seeds">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Across 100 seeds</p>
+          <p class="pp-widget__sub">For each method: the thin line spans min to max, the bar spans the 10th to 90th percentile, the dot is the median and the tick the mean. Short bars far to the left are what you want.</p>
+        </div>
+        <div class="pp-seg" id="seg-seeds" role="group" aria-label="Figure of merit">
+          <button type="button" data-value="peaking" aria-pressed="true">Peaking</button>
+          <button type="button" data-value="ripple" aria-pressed="false">Ripple</button>
+          <button type="button" data-value="overshoot" aria-pressed="false">Overshoot</button>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-seeds"></div>
+      <p class="pp-caption" id="seeds-note"></p>
+    </div>
+    <p class="pp-takeaway reveal"><b>Robust tails.</b> On overshoot every baseline's worst seed lands between 15.2% and 21.2%, 2.5&ndash;3.4&times; above ZOAF's 6.15%. The 100-call budget is a saturated regime here: every median curve has flattened before call 100.</p>
+  </div>
+</section>
+
+<section class="pp-section" id="opamp">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Three-stage op-amp</p>
+    <h2 class="pp-h2 reveal">Top-left is where you want to be.</h2>
+    <p class="pp-lead reveal">Ten passive components (\(R_{1..8}\), \(C_{1,2}\)), three figures of merit maximized one at a time under a 300-call budget. ZOAF ties the best DC gain in 72 calls instead of 200, and its gain&ndash;bandwidth product is <strong>~180&times;</strong> that of CMA-ES &mdash; in about a second of runtime, where the GP-based methods take over 20 minutes.</p>
+    <div class="pp-widget reveal" id="w-opamp">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Figure of merit vs. runtime</p>
+          <p class="pp-widget__sub">Best value found (higher is better) against wall-clock time; both axes logarithmic except power efficiency. Hover a point for its convergence call and evaluation count.</p>
+        </div>
+        <div class="pp-seg" id="seg-opamp" role="group" aria-label="Figure of merit">
+          <button type="button" data-value="gain" aria-pressed="true">DC gain</button>
+          <button type="button" data-value="gbp" aria-pressed="false">GBP</button>
+          <button type="button" data-value="eff" aria-pressed="false">Power eff.</button>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-opamp"></div>
+      <p class="pp-caption" id="opamp-note"></p>
+    </div>
+    <figure class="pp-figure reveal">
+      <img src="{{ site.baseurl }}/images/papers/zoaf-circuits.png" alt="Schematics of the three-stage op-amp and the two-stage cascaded signal-conditioning amplifier">
+      <figcaption>(a) The three-stage op-amp, each stage a high-gain macromodel. (b) The 22-parameter two-stage cascaded signal-conditioning amplifier. Both are simulated with PySpice; the RF matching network uses ADS 2021 through netlist edits.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="rf">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">RF matching network</p>
+    <h2 class="pp-h2 reveal">Reliable, not just lucky once.</h2>
+    <p class="pp-lead reveal">Fifteen lumped elements tuned for the deepest return loss \(|S_{22}|\) at 94&nbsp;GHz, 150 calls, 10 runs per method. Below about &minus;40&nbsp;dB the engineering return diminishes, so the comparison that matters is the run-to-run mean.</p>
+    <div class="pp-widget reveal" id="w-rf">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Return loss over 10 runs</p>
+          <p class="pp-widget__sub">Dot: mean, bar: &plusmn; one standard deviation, ring: best single run. Further left is a deeper match.</p>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-rf"></div>
+    </div>
+    <p class="pp-takeaway reveal"><b>Takeaway.</b> GP-EI and GP-PI average &minus;22.5 and &minus;26.4&nbsp;dB, short of the practical &minus;30&nbsp;dB threshold; GP-Mixer-AF barely clears &minus;40&nbsp;dB, and the strongest baseline, GASPAD, averages &minus;45.8&nbsp;dB. ZOAF averages &minus;57.7&nbsp;dB, with a tighter spread than GP-Mixer-AF.</p>
+  </div>
+</section>

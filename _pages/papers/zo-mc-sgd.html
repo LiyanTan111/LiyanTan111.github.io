@@ -1,0 +1,291 @@
+---
+layout: project
+permalink: /papers/zo-mc-sgd/
+title: "Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation"
+description: "ZO-MC-SGD optimizes analog circuit yield under process variation by turning SPICE specification margins into stochastic zeroth-order descent directions: a 0.95 mean yield within 50–200 simulations on five benchmarks, up to 8× fewer than the best baseline."
+paper:
+  short: ZO-MC-SGD
+  short_html: "<em>ZO</em>-MC-SGD"
+  subtitle: "Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation"
+  tagline: "Eight SPICE runs buy a direction, not a single yield number."
+  authors:
+    - Liyan Tan
+    - Yequan Zhao
+    - Ben F. Jamroz
+    - Ari Feldman
+    - Zheng Zhang
+  author_aff: [1, 1, 2, 2, 1]
+  affiliations:
+    - University of California, Santa Barbara
+    - National Institute of Standards and Technology, Boulder
+  venue: "Under review"
+  venue_meta: "arXiv preprint"
+  year: 2026
+  date: "2026-09-25"
+  arxiv: "2609.30678"
+  doi: "10.48550/arXiv.2609.30678"
+  code: "https://github.com/LiyanTan111/ZO-MC-SGD"
+  og_image: /images/papers/zomcsgd-conv-csamp.png
+  tldr: "Yield is the right objective for a manufacturable analog circuit, but a Monte Carlo yield estimate is piecewise constant in the design and expensive to sharpen, so it gives an optimizer almost nothing to follow. ZO-MC-SGD keeps yield as the score and optimizes a smooth specification-margin surrogate instead, turning every eight SPICE calls into one descent direction. It reaches a mean yield of 0.95 within 50–200 simulations on five benchmarks — up to 8x fewer than the best baseline."
+  figures:
+    - src: /images/papers/zomcsgd-conv-csamp.png
+      kind: method
+      alt: "Mean yield versus SPICE budget for one-, three- and five-stage common-source cascades"
+  stats:
+    - value: "8×"
+      label: "fewer SPICE simulations than the best baseline (5-stage csamp)"
+    - value: "50–200"
+      label: "SPICE simulations to a 0.95 mean yield, on all five benchmarks"
+    - value: "8"
+      label: "SPICE runs per descent direction (2K, K = 4)"
+    - value: "48 ms"
+      label: "optimizer overhead at 30 design variables (BO: 464 s)"
+  nav:
+    - id: overview
+      label: Overview
+    - id: why
+      label: Why
+    - id: method
+      label: Method
+    - id: results
+      label: Results
+    - id: checks
+      label: Checks
+    - id: cost
+      label: Cost
+    - id: theory
+      label: Theory
+    - id: benchmarks
+      label: Benchmarks
+    - id: faq
+      label: FAQ
+    - id: cite
+      label: Cite
+  scripts:
+    - /assets/js/zomcsgd.js
+  faq:
+    - q: "What problem does ZO-MC-SGD solve?"
+      a: "Sizing an analog circuit so that it meets all of its specifications under process variation, not just at the nominal operating point — that is, maximizing yield — when SPICE is a black box and the simulation budget is only a few hundred runs."
+    - q: "Why not just run a black-box optimizer on the Monte Carlo yield estimate?"
+      a: "Because with a fixed set of process samples the estimate only changes when a sample crosses a specification boundary, so it is piecewise constant over large regions and carries no local direction. Its accuracy also improves only as N^(-1/2), so a reliable estimate is expensive, and each one buys a single scalar at a single design point."
+    - q: "What is the yield-aligned loss, and how do you know it is aligned?"
+      a: "Every metric is scaled to comparable units, turned into a signed margin against its specification, and passed through a softplus whose sharpness controls how far past the boundary the metric keeps influencing the loss; the penalties are then combined with weights plus a mild preference for gain headroom. Alignment is checked, not assumed: the Spearman rank correlation between mean loss and empirical yield is measured on a fixed calibration set of 81 perturbed designs and the loss is accepted only at rho_s <= -0.7. All five benchmarks pass, from -0.873 to -0.977."
+    - q: "How is the gradient estimated, and why is it cheap?"
+      a: "At each step the design is perturbed along K random Gaussian directions in plus/minus pairs, with the process realization held fixed inside each pair so the difference isolates the design perturbation rather than process noise. The K differences are averaged into one stochastic gradient at a cost of 2K = 8 SPICE simulations. For comparison, the direct-yield baselines spend ten simulations to estimate one scalar yield — eight simulations buy a direction in design space instead."
+    - q: "What does the theory guarantee?"
+      a: "The estimator is unbiased for the gradient of the Gaussian-smoothed objective, with an O(eps^2) discrepancy from the unsmoothed one. Its variance falls as 1/K and carries no explicit factor in the process dimension — process variation enters only through the per-sample gradient variance. Reaching nu-stationarity takes O(n/nu^2) SPICE evaluations, independent of the mini-batch size and of the process dimension. Synthetic problems with analytic reference gradients confirm the predicted M^(-1/2) error decay."
+    - q: "How does it compare with Bayesian optimization, CMA-ES, PSO, TuRBO and RobustAnalog?"
+      a: "All six methods run under the same per-run SPICE budget rather than the same iteration count. ZO-MC-SGD ties the best baseline on the two easiest circuits and needs four to eight times less budget on the other three. An ablation reruns BO, CMA-ES, PSO and TuRBO on the softplus surrogate as well: direct yield is better for all four on every circuit, by 0.24–0.41 mean yield on average, so the baselines are reported on the objective that favors them."
+    - q: "Does it need the process variables to be independent?"
+      a: "No — only independent samples from their joint distribution. Replacing the independent process model with a correlated one (correlation 0.5 among parameters sharing oxide, doping or lithographic effects) leaves the advantage intact: 200 simulations to target on 3-stage csamp against 400 for CMA-ES, and 25 against 100 on 2-stage csmiller."
+    - q: "What are the limits, and what comes next?"
+      a: "The method needs a process distribution that can be sampled. If that distribution is itself uncertain or drifts across manufacturing conditions, the problem becomes optimization under distributional uncertainty, and a distributionally robust formulation is the natural extension. The bounds carry no explicit process-dimension term, but the experiments only reach 42 mismatch variables; production-scale circuits with hundreds may need variance reduction or structure-exploiting estimators."
+  abstract: "Yield optimization under process variation is expensive because each candidate design must be evaluated across many Monte Carlo SPICE samples. The resulting finite-sample yield is also piecewise constant in the design parameters, providing little local information for optimization. We introduce zeroth-order Monte Carlo stochastic gradient descent (ZO-MC-SGD), a black-box method that converts continuous specification margins into stochastic descent directions. Each update evaluates opposite design perturbations under shared process samples, allowing a small simulation batch to estimate a local direction without differentiating SPICE or fitting a global surrogate model. A Spearman rank-correlation test checks that the margin-based loss orders designs consistently with empirical yield. We prove that the estimator is unbiased for a Gaussian-smoothed surrogate and derive variance and sample-complexity bounds with no explicit dependence on process dimension. Across five analog circuit benchmarks with up to 30 design variables and 42 process variables, ZO-MC-SGD reaches a mean yield of 0.95 on four circuits within 50–200 simulations and the empirical yield ceiling on the fifth. Relative to the best of five black-box and learning-based baselines, it reduces the required simulation budget by up to a factor of eight."
+  bibtex: |
+    @article{tan2026yield,
+      title   = {Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation},
+      author  = {Tan, Liyan and Zhao, Yequan and Jamroz, Ben F. and Feldman, Ari and Zhang, Zheng},
+      journal = {arXiv preprint arXiv:2609.30678},
+      year    = {2026}
+    }
+---
+<section class="pp-section" id="overview">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Overview</p>
+    <h2 class="pp-h2 reveal">Optimize the margins, score the yield.</h2>
+    <p class="pp-lead reveal">A fabricated analog circuit only ships if it meets every specification under process variation. That probability, the <strong>yield</strong>, is what makes a design manufacturable &mdash; but every candidate has to be checked across many Monte Carlo SPICE samples, and the finite-sample estimate barely moves when the design does.</p>
+    <p class="reveal"><strong>ZO-MC-SGD</strong> keeps yield as the score and changes the optimization signal. Each SPICE run is turned into continuous specification margins, a softplus loss is checked for rank agreement with yield, and paired design perturbations under shared process samples give a stochastic descent direction &mdash; no SPICE derivatives, no global surrogate model.</p>
+    <div class="pp-tldr reveal"><b>TL;DR</b><p>Across five SPICE benchmarks with up to 30 design and 42 process variables, ZO-MC-SGD reaches a <strong>0.95 mean yield within 50&ndash;200 simulations</strong>. It ties the best of five black-box and learning-based baselines on the two easiest circuits and needs <strong>4&ndash;8&times; fewer simulations</strong> on the other three.</p></div>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="why">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Why</p>
+    <h2 class="pp-h2 reveal">Yield is flat. Margins are not.</h2>
+    <p class="pp-lead reveal">With a fixed set of process samples, the yield estimate only changes when a sample crosses a specification boundary, so it is piecewise constant and its local slope is zero almost everywhere. The margins behind it vary smoothly, and a softplus loss built from them keeps pointing the way.</p>
+    <div class="pp-widget reveal" id="w-flat">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">One design knob, two specifications <span class="pp-tag">Toy model</span></p>
+          <p class="pp-widget__sub">Gain improves and power worsens as the knob increases; each sample adds Gaussian process noise to both margins. Hover the plots to probe a design. An illustration of the idea, not circuit data.</p>
+        </div>
+        <div class="pp-seg" id="seg-n" role="group" aria-label="Monte Carlo samples">
+          <button type="button" data-value="10" aria-pressed="true">N = 10</button>
+          <button type="button" data-value="80" aria-pressed="false">N = 80</button>
+          <button type="button" data-value="1000" aria-pressed="false">N = 1000</button>
+        </div>
+      </div>
+      <div class="pp-toy">
+        <div>
+          <p class="pp-panel__label" style="margin:0 0 .3rem"><b>Yield estimate &#374;</b><span>the score</span></p>
+          <div class="pp-chart" id="chart-yield"></div>
+          <p class="pp-panel__label" style="margin:.8rem 0 .3rem"><b>Softplus margin loss</b><span>the optimization signal</span></p>
+          <div class="pp-chart" id="chart-loss"></div>
+        </div>
+        <div class="pp-toy__side">
+          <div class="pp-range"><label for="flat-a">Sharpness &alpha;</label><input type="range" id="flat-a" min="1" max="30" step="1" value="6"><output id="flat-a-out">6</output></div>
+          <div class="pp-toy__stats">
+            <div class="pp-toy__stat"><span>Knob x</span><b id="flat-x">–</b></div>
+            <div class="pp-toy__stat"><span>&#374;(x)</span><b id="flat-y">–</b></div>
+            <div class="pp-toy__stat"><span>Local slope of &#374;</span><b id="flat-dy">–</b></div>
+            <div class="pp-toy__stat is-ours"><span>Local slope of loss</span><b id="flat-dl">–</b></div>
+            <div class="pp-toy__stat"><span>Rank check &rho;<sub>s</sub><small>accept if &le; &minus;0.7</small></span><b id="flat-rho">–</b></div>
+          </div>
+          <button type="button" class="pp-btn pp-btn--sm" id="flat-resample">Draw new samples</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="pp-section" id="method">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Method</p>
+    <h2 class="pp-h2 reveal">From a SPICE run to a descent direction.</h2>
+    <p class="pp-lead reveal">ZO-MC-SGD minimizes the expected per-sample loss \(F(x)=\mathbb{E}_{\xi\sim\rho}[\ell(x,\xi)]\) over the design box, while the yield \(Y(x)\) stays the quantity used to judge the returned design.</p>
+    <div class="pp-cards">
+      <div class="pp-card reveal"><span class="pp-card__num">1</span><h3>Margins, not pass/fail</h3><p>Gain (dB), unity-gain bandwidth (decades of Hz) and power (mW) become signed shortfalls \(\delta_k\) against their specs. A softplus with sharpness \(\alpha_k\) penalizes violations and keeps rewarding margin near the boundary.</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">2</span><h3>Check the ordering</h3><p>Before optimizing, the Spearman rank correlation between mean loss and empirical yield is measured on 81 perturbed designs. The loss is used only if \(\rho_s \le -0.7\); all five circuits pass, at &minus;0.873 to &minus;0.977.</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">3</span><h3>Paired perturbations</h3><p>Each of \(K = 4\) random directions is probed at \(x \pm \epsilon v\) under the <em>same</em> process sample, so the difference isolates the design change. 2K = 8 SPICE runs give one gradient estimate, followed by a projected Adam step.</p></div>
+    </div>
+    <div class="pp-math reveal">
+      $$\sigma_k = \frac{1}{\alpha_k}\log\!\bigl(1+e^{\alpha_k\delta_k(x,\xi)}\bigr), \qquad \ell(x,\xi) = \sum_k w_k\,\sigma_k - \gamma\, f_{\text{gain}}(x,\xi)$$
+    </div>
+    <div class="pp-math reveal">
+      $$\hat g^{\,\text{MC}} = \frac{1}{K}\sum_{i=1}^{K}\frac{\ell\bigl(x+\epsilon v^{(i)},\xi^{(i)}\bigr)-\ell\bigl(x-\epsilon v^{(i)},\xi^{(i)}\bigr)}{2\epsilon}\,v^{(i)}, \qquad x \leftarrow \Pi_{[0,1]^n}\bigl(x-\eta\,\hat g^{\,\text{MC}}\bigr)$$
+    </div>
+    <p class="pp-caption reveal">What a SPICE run buys: the direct-yield baselines (BO, CMA-ES, PSO, TuRBO) spend 10 simulations per query to estimate one scalar yield; RobustAnalog spends 20 per step on its margin reward; ZO-MC-SGD spends 8 to estimate a direction in design space. All methods share the same per-run SPICE budget, including ZO-MC-SGD&rsquo;s random-search warm start.</p>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="results">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Results</p>
+    <h2 class="pp-h2 reveal">The gap widens as circuits grow.</h2>
+    <p class="pp-lead reveal">Five circuits, eight budgets from 25 to 3,200 SPICE runs, five seeds each; every returned design is re-scored on the same 80 held-out process samples. The competing methods must first fit a model, evaluate a population or train a policy; ZO-MC-SGD turns each 8-run batch straight into a step.</p>
+    <div class="pp-widget reveal" id="w-yield">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Mean yield vs. SPICE budget: hover to compare</p>
+          <p class="pp-widget__sub">Five-seed mean yield, best so far over budgets as in the paper&rsquo;s figure; the dashed line is the 0.95 target, and &ldquo;0&rdquo; is the shared initial design. Click a baseline on the right to highlight it.</p>
+        </div>
+        <div class="pp-seg" id="seg-circ" role="group" aria-label="Circuit">
+          <button type="button" data-value="cs1" aria-pressed="false">CS &times;1</button>
+          <button type="button" data-value="cs3" aria-pressed="true">CS &times;3</button>
+          <button type="button" data-value="cs5" aria-pressed="false">CS &times;5</button>
+          <button type="button" data-value="m2" aria-pressed="false">Miller &times;2</button>
+          <button type="button" data-value="m3" aria-pressed="false">Miller &times;3</button>
+        </div>
+      </div>
+      <p class="pp-conv__summary" id="yield-summary"></p>
+      <div class="pp-conv pp-conv--wide">
+        <div><div class="pp-chart" id="chart-yieldb"></div>
+          <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>ZO-MC-SGD</span><span><i style="background:var(--s-mezo)"></i><span id="yield-sel-name">selected baseline</span></span><span><i style="background:#b9c2cf"></i>other baselines</span></div></div>
+        <div class="pp-conv__read" id="yield-read" aria-live="polite"></div>
+      </div>
+    </div>
+
+    <div class="pp-widget reveal" id="w-target">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Budget to reach a 0.95 mean yield</p>
+          <p class="pp-widget__sub">Blue: ZO-MC-SGD. Orange: the best baseline on that circuit. Grey: the other baselines; hover for names. Logarithmic axis; the right edge means the target was never reached within 3,200 runs.</p>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-target"></div>
+    </div>
+    <p class="pp-takeaway reveal"><b>Takeaway.</b> On the 3- and 5-stage CS cascades the strongest baselines need 800 simulations where ZO-MC-SGD needs 200 and 100. CMA-ES never reaches the target on 3-stage csamp, and RobustAnalog misses it on three of five circuits even at 3,200.</p>
+  </div>
+</section>
+
+<section class="pp-section" id="checks">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Checks</p>
+    <h2 class="pp-h2 reveal">Aligned, re-scored, and fair to the baselines.</h2>
+    <p class="pp-lead reveal">Three questions a skeptical reader should ask: does lower loss really mean higher yield, does the returned yield survive a much larger fresh sample, and would the baselines have done better on the same surrogate?</p>
+    <div class="pp-widget reveal" id="w-checks">
+      <div class="pp-trio">
+        <div><p class="pp-panel__label" style="margin:0 0 .4rem"><b>Rank alignment &rho;<sub>s</sub></b><span>accept &le; &minus;0.7</span></p><div class="pp-chart" id="chart-rho"></div></div>
+        <div><p class="pp-panel__label" style="margin:0 0 .4rem"><b>Yield on 1000 fresh samples</b><span>target 0.95</span></p><div class="pp-chart" id="chart-fresh"></div></div>
+        <div><p class="pp-panel__label" style="margin:0 0 .4rem"><b>Direct yield &minus; softplus</b><span>baselines</span></p><div class="pp-chart" id="chart-abl"></div></div>
+      </div>
+      <p class="pp-caption">Left: Spearman correlation between mean loss and empirical yield on the 81-design calibration set. Middle: ZO-MC-SGD designs returned at the target budgets, re-estimated with N&nbsp;=&nbsp;1000; dot = five-seed mean, bar = observed range. On CS&nbsp;&times;1 no method exceeds 0.95 at any budget, an empirical yield ceiling. Right: rerunning BO, CMA-ES, PSO and TuRBO on the softplus surrogate makes every one of them worse on every circuit (bar: mean over circuits, dots: individual circuits), so the main comparison uses direct yield for them. Hover for exact values.</p>
+    </div>
+    <p class="pp-takeaway reveal"><b>Also robust to correlated variation.</b> With 0.5 correlation among parameters sharing oxide, doping or lithographic effects, ZO-MC-SGD still needs 200 simulations on 3-stage csamp (CMA-ES: 400) and 25 on 2-stage csmiller (CMA-ES: 100). It needs independent <em>samples</em>, not independent process variables.</p>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="cost">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Cost</p>
+    <h2 class="pp-h2 reveal">The optimizer itself is almost free.</h2>
+    <p class="pp-lead reveal">SPICE takes about 350&nbsp;s for every method at a 1,600-run budget. What differs is the optimizer&rsquo;s own computation, which grows with the design dimension for the surrogate-model methods.</p>
+    <div class="pp-widget reveal" id="w-overhead">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Wall-clock per run on the CS cascades, B = 1600</p>
+          <p class="pp-widget__sub">Grey: SPICE (&asymp;350&nbsp;s, the same for every method). Colored: optimizer overhead, median over three seeds. Bars start at zero.</p>
+        </div>
+        <div class="pp-seg" id="seg-dim" role="group" aria-label="Design dimension">
+          <button type="button" data-value="0" aria-pressed="false">n = 6</button>
+          <button type="button" data-value="1" aria-pressed="false">n = 18</button>
+          <button type="button" data-value="2" aria-pressed="true">n = 30</button>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-overhead"></div>
+    </div>
+  </div>
+</section>
+
+<section class="pp-section" id="theory">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Theory</p>
+    <h2 class="pp-h2 reveal">No explicit dependence on the process dimension.</h2>
+    <div class="pp-cards">
+      <div class="pp-card reveal"><span class="pp-card__num">1</span><h3>Unbiased</h3><p>The estimator is unbiased for the gradient of the Gaussian-smoothed objective \(F_\epsilon\), which differs from \(F\) by \(O(\epsilon^2)\).</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">2</span><h3>Variance &prop; 1/K</h3><p>Its variance falls as \(1/K\) with no explicit factor of the process dimension; process variation enters only through the per-sample gradient variance.</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">3</span><h3>Sample complexity</h3><p>Reaching \(\nu\)-stationarity takes \(O(n/\nu^2)\) SPICE evaluations, independent of the mini-batch size and of the process dimension.</p></div>
+    </div>
+    <div class="pp-widget reveal" id="w-est">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">The estimator, checked against ground truth</p>
+          <p class="pp-widget__sub">Normalized error of the averaged estimate against the number of independent estimates M, at the deployed K = 4 and &epsilon; = 5&times;10<sup>&minus;3</sup> (n = 6, d<sub>&xi;</sub> = 10). Bars are 95% bootstrap intervals; the dashed line is the M<sup>&minus;1/2</sup> rate.</p>
+        </div>
+      </div>
+      <div class="pp-twin" style="gap:22px">
+        <div><p class="pp-panel__label" style="margin:0 0 .3rem"><b>S1 &middot; stochastic quadratic</b><span>exact gradient</span></p><div class="pp-chart" id="chart-s1"></div></div>
+        <div><p class="pp-panel__label" style="margin:0 0 .3rem"><b>S2 &middot; softplus, yield-like</b><span>2&times;10<sup>6</sup>-sample reference</span></p><div class="pp-chart" id="chart-s2"></div></div>
+      </div>
+      <p class="pp-caption">Both follow the M<sup>&minus;1/2</sup> sampling rate; S2 reaches 0.57% at M = 1.28&times;10<sup>5</sup>. Varying &epsilon; over a fourfold range shows no bias floor, consistent with the O(&epsilon;<sup>2</sup>) smoothing error.</p>
+    </div>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="benchmarks">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Benchmarks</p>
+    <h2 class="pp-h2 reveal">Five circuits, two families.</h2>
+    <p class="pp-lead reveal">Common-source cascades with one, three and five stages, and Miller-compensated amplifiers with two and three, simulated in ngspice with Pelgrom-scaled Gaussian device mismatch. A sample passes only when gain, unity-gain bandwidth and static power all meet their limits at once (V<sub>DD</sub> = 1&nbsp;V).</p>
+    <div class="pp-widget reveal">
+      <div style="overflow-x:auto">
+      <table class="pp-spec">
+        <thead><tr><th>Circuit</th><th>n</th><th>d<sub>&xi;</sub></th><th>Gain</th><th>UGBW</th><th>Power</th><th>Initial yield</th><th>&rho;<sub>s</sub></th></tr></thead>
+        <tbody>
+          <tr><td>1-stage csamp</td><td>6</td><td>10</td><td>&ge; 20 dB</td><td>&ge; 1.0 MHz</td><td>&le; 0.5 mW</td><td>0.24</td><td>&minus;0.977</td></tr>
+          <tr><td>3-stage csamp</td><td>18</td><td>26</td><td>&ge; 60 dB</td><td>&ge; 50 MHz</td><td>&le; 0.5 mW</td><td>0.20</td><td>&minus;0.873</td></tr>
+          <tr><td>5-stage csamp</td><td>30</td><td>42</td><td>&ge; 95 dB</td><td>&ge; 30 MHz</td><td>&le; 0.7 mW</td><td>0.34</td><td>&minus;0.915</td></tr>
+          <tr><td>2-stage csmiller</td><td>14</td><td>26</td><td>&ge; 50 dB</td><td>&ge; 0.2 MHz</td><td>&le; 0.5 mW</td><td>0.64</td><td>&minus;0.876</td></tr>
+          <tr><td>3-stage csmiller</td><td>22</td><td>38</td><td>&ge; 60 dB</td><td>&ge; 0.05 MHz</td><td>&le; 0.7 mW</td><td>0.66</td><td>&minus;0.953</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="pp-twin reveal" style="gap:22px;align-items:center;margin-top:1.4rem">
+      <figure class="pp-figure" style="margin:0"><img src="{{ site.baseurl }}/images/papers/zomcsgd-cs-amp.png" alt="One-stage common-source amplifier schematic"></figure>
+      <figure class="pp-figure" style="margin:0"><img src="{{ site.baseurl }}/images/papers/zomcsgd-cs-miller.png" alt="Two-stage Miller-compensated amplifier schematic"></figure>
+    </div>
+    <p class="pp-caption reveal">The base topology of each family: a common-source stage (left) and a two-stage Miller-compensated amplifier (right). n is the design dimension and d<sub>&xi;</sub> the number of process variables.</p>
+  </div>
+</section>
