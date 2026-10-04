@@ -220,13 +220,26 @@ body.pp {
 .pp-details[open] > summary::before { content: '▾ '; }
 
 /* 玩具模拟：左两图、右控件 */
-.pp-toy { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 18px; align-items: start; }
-.pp-toy__side { display: flex; flex-direction: column; gap: 10px; }
-.pp-toy__side .pp-range { justify-content: space-between; }
-.pp-toy__side .pp-range { gap: .6rem; }
-.pp-toy__side .pp-range input[type=range] { width: 100px; flex: 1 1 auto; }
-.pp-toy__side .pp-readout b { font-size: 1.35rem; }
-.pp-toy .pp-panel canvas { aspect-ratio: 13 / 9; }
+.pp-toy { display: grid; grid-template-columns: minmax(0, 1fr) 248px; gap: 16px; align-items: stretch; }
+.pp-toy .pp-twin { height: 100%; }
+.pp-toy .pp-panel { display: flex; flex-direction: column; }
+.pp-toy .pp-panel canvas { aspect-ratio: 13 / 9; margin-top: auto; }
+.pp-toy__side { display: flex; flex-direction: column; gap: 12px; }
+.pp-toy__side .pp-range { justify-content: space-between; gap: .6rem; }
+.pp-toy__side .pp-range input[type=range] { width: 90px; flex: 1 1 auto; }
+.pp-toy__side .pp-range output, .pp-toy__stat b { font: 600 1rem/1.2 var(--sans); color: var(--ink); font-variant-numeric: tabular-nums; }
+.pp-toy__side .pp-range output { min-width: 2.4em; text-align: right; }
+.pp-toy__stats { margin-top: auto; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 14px; background: #fbfcfe; overflow: hidden; }
+.pp-toy__stat { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .62rem .9rem; font-size: .86rem; color: var(--muted); }
+.pp-toy__stat + .pp-toy__stat { border-top: 1px solid var(--line-soft); }
+.pp-toy__stat span { line-height: 1.25; }
+.pp-toy__stat small { display: block; font-size: .74rem; color: var(--muted); opacity: .85; }
+.pp-toy__stat sub { font-size: .7em; }
+.pp-toy__stat.is-ours { background: var(--accent-soft); }
+.pp-toy__stat.is-ours b { color: var(--accent-ink); }
+.pp-cos { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 20px; align-items: center; }
+.pp-cos__side { margin-top: 0; }
+.pp-cos__side .pp-conv__note { margin: 0; padding: .62rem .9rem; border-top: 1px solid var(--line-soft); }
 
 /* 收敛曲线：左图、右读数 */
 .pp-conv { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 18px; align-items: start; }
@@ -275,7 +288,8 @@ body.pp {
   .pp-stats { grid-template-columns: repeat(2, 1fr); }
   .pp-cards { grid-template-columns: 1fr; }
   .pp-twin { grid-template-columns: 1fr; }
-  .pp-toy, .pp-conv { grid-template-columns: 1fr; }
+  .pp-toy, .pp-conv, .pp-cos { grid-template-columns: 1fr; }
+  .pp-toy .pp-twin { height: auto; }
   .pp-toy .pp-twin { grid-template-columns: 1fr 1fr; }
   .pp-readouts { grid-template-columns: 1fr 1fr; }
   .pp-nav__links { gap: 1rem; }

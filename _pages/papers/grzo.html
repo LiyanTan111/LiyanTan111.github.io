@@ -134,9 +134,11 @@ paper:
         <div class="pp-toy__side">
           <div class="pp-range"><label for="toy-b">Batch size B</label><input type="range" id="toy-b" min="1" max="32" step="1" value="16"><output id="toy-b-out">16</output></div>
           <div class="pp-range"><label for="toy-c">Alignment c</label><input type="range" id="toy-c" min="0" max="1" step="0.01" value="0.83"><output id="toy-c-out">0.83</output></div>
-          <div class="pp-readout"><span>MeZO · mean cosine</span><b id="toy-cos-m">–</b></div>
-          <div class="pp-readout pp-readout--ours"><span>GRZO · mean cosine</span><b id="toy-cos-g">–</b></div>
-          <div class="pp-readout"><span>Predicted B<sub style="text-transform:none">eff</sub></span><b id="toy-beff">–</b><small>= cB + (1 − c), the variance reduction</small></div>
+          <div class="pp-toy__stats">
+            <div class="pp-toy__stat"><span>MeZO mean cosine</span><b id="toy-cos-m">–</b></div>
+            <div class="pp-toy__stat is-ours"><span>GRZO mean cosine</span><b id="toy-cos-g">–</b></div>
+            <div class="pp-toy__stat"><span>Predicted B<sub>eff</sub><small>cB + (1 − c)</small></span><b id="toy-beff">–</b></div>
+          </div>
         </div>
       </div>
     </div>
@@ -148,8 +150,17 @@ paper:
           <p class="pp-widget__sub">Cosine similarity between a single ZO estimate and the exact backpropagation gradient on one Llama3-8B decoder block (218M parameters), mean over 3,000 paired trials per B. In 218M dimensions every cosine is tiny; what matters is that GRZO's grows with B while MeZO's stays flat.</p>
         </div>
       </div>
-      <div class="pp-chart" id="chart-cos"></div>
-      <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>GRZO</span><span><i style="background:var(--s-mezo)"></i>MeZO</span></div>
+      <div class="pp-cos">
+        <div>
+          <div class="pp-chart" id="chart-cos"></div>
+          <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>GRZO</span><span><i style="background:var(--s-mezo)"></i>MeZO</span></div>
+        </div>
+        <div class="pp-toy__stats pp-cos__side">
+          <div class="pp-toy__stat is-ours"><span>At B = 16</span><b>×4.6</b></div>
+          <div class="pp-toy__stat is-ours"><span>At B = 32</span><b>×6.5</b></div>
+          <p class="pp-conv__note">GRZO&rsquo;s cosine over MeZO&rsquo;s. MeZO stays near 5.3&times;10<sup>&minus;5</sup> at every B: one shared direction, however many examples.</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -193,7 +204,7 @@ paper:
           <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>GRZO</span><span><i style="background:var(--s-fzoo)"></i>FZOO</span><span><i style="background:var(--s-mezo)"></i>MeZO</span></div></div>
         <div class="pp-conv__read" id="conv-read" aria-live="polite"></div>
       </div>
-      <p class="pp-caption">Curves digitized from the paper&rsquo;s convergence figure (smoothed as plotted there), clipped to the same window; MeZO diverges on DROP. GRZO&rsquo;s 23% per-step premium is already included in the wall-clock panels.</p>
+      <p class="pp-caption">Curves digitized from the paper&rsquo;s convergence figure (smoothed as plotted there; FZOO on RTE smoothed a little more), clipped to the same window; MeZO diverges on DROP. GRZO&rsquo;s 23% per-step premium is already included in the wall-clock panels.</p>
     </div>
   </div>
 </section>
