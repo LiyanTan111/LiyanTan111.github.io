@@ -1,0 +1,234 @@
+---
+layout: project
+permalink: /papers/grzo/
+title: "GRZO: Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning"
+description: "GRZO draws one pseudo-independent perturbation per mini-batch example, giving B zeroth-order gradient directions per step at the same two forward passes and inference-level memory. +3.0 average accuracy over MeZO on Llama3-8B; Findings of EMNLP 2026."
+paper:
+  short: GRZO
+  short_html: "GR<em>ZO</em>"
+  subtitle: "Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning"
+  tagline: "One perturbation per example, not one per batch: B gradient directions per step for the price of MeZO's one."
+  authors:
+    - Liyan Tan
+    - Yequan Zhao
+    - Yifan Yang
+    - Ruijie Zhang
+    - Xinling Yu
+    - Zheng Zhang
+  affiliations:
+    - University of California, Santa Barbara
+  venue: "Findings of EMNLP 2026"
+  year: 2026
+  date: "2026-06-01"
+  arxiv: "2606.02857"
+  doi: "10.48550/arXiv.2606.02857"
+  code: "https://github.com/LiyanTan111/GRZO-public"
+  og_image: /images/papers/grzo-pipeline.png
+  tldr: "One perturbation per example instead of one per batch. GRZO raises the number of zeroth-order gradient directions from one to the batch size at no extra forward cost, beating MeZO by +3.0 average accuracy while staying within 0.5% of the forward-only inference memory floor. It is a drop-in replacement for MeZO and composes with its sparse, low-rank and quantized variants, lifting them by +4.9 on average."
+  figures:
+    - src: /images/papers/grzo-pipeline.png
+      kind: method
+      alt: "Side-by-side pipeline comparison of MeZO and GRZO"
+  stats:
+    - value: "+3.0"
+      label: "average accuracy over MeZO on Llama3-8B"
+    - value: "16"
+      label: "gradient directions per step at B = 16 (MeZO: 1)"
+    - value: "0.5%"
+      label: "above the forward-only inference memory floor"
+    - value: "+4.9"
+      label: "average lift for sparse, low-rank and quantized ZO variants"
+  nav:
+    - id: overview
+      label: Overview
+    - id: method
+      label: Method
+    - id: why
+      label: Why it works
+    - id: results
+      label: Results
+    - id: cost
+      label: Cost
+    - id: dropin
+      label: Drop-in
+    - id: faq
+      label: FAQ
+    - id: cite
+      label: Cite
+  scripts:
+    - /assets/js/grzo.js
+  faq:
+    - q: "What problem does GRZO solve?"
+      a: "It reduces the variance of zeroth-order gradient estimation when fine-tuning large language models, which is the main reason ZO fine-tuning underperforms backpropagation."
+    - q: "How is GRZO different from MeZO?"
+      a: "MeZO uses one random perturbation shared by the whole mini-batch, so each step yields a single gradient direction. GRZO assigns a pseudo-independent perturbation to every example in the batch and combines the per-example losses with group-relative normalization, so one step yields as many directions as there are examples — without any extra forward passes."
+    - q: "Does GRZO cost more compute or memory than MeZO?"
+      a: "Memory, no: the number of forward passes is unchanged and peak memory stays at the inference floor (17.82 GB on Llama3-8B, 0.5% above the forward-only floor, essentially level with MeZO). Time, slightly: GRZO carries a 23% per-step time premium, but it converges fastest in wall-clock time, so it reaches a given loss sooner."
+    - q: "How much better is it in practice?"
+      a: "Average accuracy on Llama3-8B improves by +3.0 over MeZO, and on RTE it reaches 81.6% against MeZO's 74.4%. Used as a drop-in replacement for the MeZO core inside sparse, low-rank, and quantized ZO methods, it improves them by +4.9 on average. Evaluated on RoBERTa-large, Llama3-8B, and OPT-13B."
+    - q: "Is there a theoretical guarantee?"
+      a: "Yes. GRZO is shown to be directionally unbiased, its variance shrinks proportionally to the batch size, and it admits a tighter nonconvex convergence bound than MeZO."
+    - q: "When should I use GRZO instead of backpropagation?"
+      a: "When memory is the binding constraint — fine-tuning a model that does not fit in memory with activations stored, or on hardware without enough capacity for a backward pass. GRZO keeps ZO's inference-level memory while closing part of the accuracy gap."
+  abstract: >-
+    Zeroth-order (ZO) optimization is a memory-efficient alternative to backpropagation for fine-tuning large language models, but its deployment is limited by the high variance of gradient estimation. We propose GRZO, a Group-Relative Zeroth-Order optimizer that draws one pseudo-independent perturbation per mini-batch example and aggregates the per-example losses through group-relative normalization, raising the effective gradient-direction count from one to the batch size at no additional forward cost while preserving inference-level memory. We prove that GRZO is directionally unbiased with variance shrinking proportionally to the batch size, yielding a tighter nonconvex convergence bound than MeZO. Across RoBERTa-large, Llama3-8B, and OPT-13B over multiple tasks, GRZO improves average accuracy on Llama3-8B by +3.0 over MeZO while staying within 0.5% of the forward-only inference memory floor; as a drop-in replacement for the MeZO core, it lifts sparse, low-rank, and quantized ZO variants by +4.9 on average.
+  bibtex: |
+    @inproceedings{tan2026grzo,
+      title     = {GRZO: Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning},
+      author    = {Tan, Liyan and Zhao, Yequan and Yang, Yifan and Zhang, Ruijie and Yu, Xinling and Zhang, Zheng},
+      booktitle = {Findings of the Association for Computational Linguistics: EMNLP 2026},
+      year      = {2026}
+    }
+---
+<section class="pp-section" id="overview">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Overview</p>
+    <h2 class="pp-h2 reveal">One perturbation per example, not one per batch.</h2>
+    <p class="pp-lead reveal">Zeroth-order (ZO) fine-tuning trains an LLM with forward passes only, so it fits in inference-level memory. Its weak spot is the gradient estimate: MeZO draws <strong>one</strong> random perturbation for the whole mini-batch, so every step follows a single, very noisy direction.</p>
+    <p class="reveal">GRZO gives <strong>every example its own pseudo-independent perturbation</strong> and combines the per-example loss differences with a group-relative normalization. One step now carries <strong>B directions instead of one</strong> &mdash; with the same two forward passes, and peak memory still at the inference floor.</p>
+    <div class="pp-tldr reveal"><b>TL;DR</b><p>On Llama3-8B, GRZO beats MeZO by <strong>+3.0</strong> average accuracy while staying within <strong>0.5%</strong> of the forward-only memory floor. It is a drop-in replacement for the MeZO core: inside sparse, low-rank and quantized ZO methods it lifts them by <strong>+4.9</strong> on average.</p></div>
+    <figure class="pp-figure reveal">
+      <img src="{{ site.baseurl }}/images/papers/grzo-pipeline.png" alt="Side-by-side pipeline comparison of MeZO and GRZO">
+      <figcaption><strong>MeZO vs. GRZO.</strong> MeZO (left) shares one perturbation across the mini-batch: one gradient direction per step. GRZO (right) builds pseudo-independent per-example perturbations and applies group-relative normalization: B directions per step, much lower variance, the same forward budget.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="method">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Method</p>
+    <h2 class="pp-h2 reveal">Turn the batch dimension into the variance-reduction lever.</h2>
+    <p class="pp-lead reveal">Earlier fixes either shrink the effective parameter dimension (and lose full-parameter expressivity) or enrich the estimator with extra forward passes or persistent state. GRZO keeps MeZO's envelope &mdash; two forward passes, inference memory &mdash; and gets its extra directions from the examples it already processes.</p>
+    <div class="pp-cards">
+      <div class="pp-card reveal"><span class="pp-card__num">1</span><h3>Per-example perturbations</h3><p>One shared base perturbation <i>U</i> per layer, modulated by per-example random sign vectors (a Flipout-style factorization). B pseudo-independent directions, no B weight copies.</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">2</span><h3>Group-relative weights</h3><p>Each example's two-sided loss difference &delta;<sub>i</sub> is normalized by the within-batch standard deviation, as in GRPO advantages &mdash; scale-free and robust to loss-magnitude drift.</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">3</span><h3>Same budget</h3><p>Perturbations are built transiently inside each layer's forward hook and regenerated from seeds for the update, so the B directions cost +0.08&nbsp;GB on Llama3-8B.</p></div>
+    </div>
+    <div class="pp-math reveal">
+      $$\Delta W_i = U \odot (r_i s_i^{\top}), \qquad a_i = \frac{\delta_i}{s+\epsilon}, \qquad \hat g = \frac{1}{2\sigma B}\sum_{i=1}^{B} a_i\, z_i$$
+    </div>
+    <p class="pp-caption reveal">\(r_i, s_i\) are per-example Rademacher sign vectors, \(\delta_i = \ell_i^{+}-\ell_i^{-}\) the two-sided loss difference of example \(i\), \(s\) the within-batch standard deviation of the \(\delta_i\), and \(z_i=\mathrm{vec}(\Delta W_i)\).</p>
+  </div>
+</section>
+
+<section class="pp-section" id="why">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Why it works</p>
+    <h2 class="pp-h2 reveal">B directions buy a B<sub>eff</sub>-fold variance cut.</h2>
+    <p class="pp-lead reveal">GRZO is directionally unbiased, and its variance relative to MeZO is governed by how aligned the per-example gradients are. With <i>c</i> the mean pairwise cosine between them:</p>
+    <div class="pp-math reveal">$$\frac{\mathrm{Var}(\hat g_{\text{MeZO}})}{\mathrm{Var}(\hat g_{\text{GRZO}})} \;\approx\; B_{\text{eff}} \;=\; cB + (1-c)$$</div>
+    <p class="reveal">So GRZO reaches an \(\epsilon\)-stationary point in about \(B_{\text{eff}}\times\) fewer steps. On a Llama3-8B decoder block the measured alignment is \(c = 0.83\), which gives \(B_{\text{eff}} \approx 13\) at \(B = 16\). Try it below.</p>
+
+    <div class="pp-widget reveal" id="w-toy">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Watch the estimate settle <span class="pp-tag">Toy simulation</span></p>
+          <p class="pp-widget__sub">Each arrow is one step's gradient estimate, drawn at its true angle to the exact batch gradient (pointing up). 32-dimensional Gaussian toy &mdash; an illustration of the theorem, not experimental data.</p>
+        </div>
+        <div class="pp-controls" style="display:flex;flex-direction:column;gap:.5rem">
+          <div class="pp-range"><label for="toy-b">Batch size B</label><input type="range" id="toy-b" min="1" max="32" step="1" value="16"><output id="toy-b-out">16</output></div>
+          <div class="pp-range"><label for="toy-c">Alignment c</label><input type="range" id="toy-c" min="0" max="1" step="0.01" value="0.83"><output id="toy-c-out">0.83</output></div>
+        </div>
+      </div>
+      <div class="pp-twin">
+        <div class="pp-panel"><div class="pp-panel__label"><b>MeZO</b><span>1 direction / step</span></div><canvas id="toy-mezo" width="560" height="420" aria-label="MeZO gradient estimates"></canvas></div>
+        <div class="pp-panel"><div class="pp-panel__label"><b>GRZO</b><span id="toy-dirs">16 directions / step</span></div><canvas id="toy-grzo" width="560" height="420" aria-label="GRZO gradient estimates"></canvas></div>
+      </div>
+      <div class="pp-readouts">
+        <div class="pp-readout"><span>MeZO · mean cosine</span><b id="toy-cos-m">–</b><small>to the exact gradient</small></div>
+        <div class="pp-readout pp-readout--ours"><span>GRZO · mean cosine</span><b id="toy-cos-g">–</b><small>to the exact gradient</small></div>
+        <div class="pp-readout"><span>Predicted B<sub style="text-transform:none">eff</sub></span><b id="toy-beff">–</b><small>= cB + (1 − c), the variance reduction</small></div>
+      </div>
+    </div>
+
+    <div class="pp-widget reveal" id="w-cos">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Measured on Llama3-8B</p>
+          <p class="pp-widget__sub">Cosine similarity between a single ZO estimate and the exact backpropagation gradient on one Llama3-8B decoder block (218M parameters), mean over 3,000 paired trials per B. In 218M dimensions every cosine is tiny; what matters is that GRZO's grows with B while MeZO's stays flat.</p>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-cos"></div>
+      <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>GRZO</span><span><i style="background:var(--s-mezo)"></i>MeZO</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="results">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Results</p>
+    <h2 class="pp-h2 reveal">Best zeroth-order accuracy, at inference memory.</h2>
+    <p class="pp-lead reveal">Full-parameter fine-tuning for 20k steps at batch size 16 on SuperGLUE classification and QA. GRZO is the strongest ZO method on Llama3-8B (+3.0 average over MeZO, +7.2 on RTE) and on OPT-13B, narrowing the gap to first-order Adam without its memory.</p>
+    <div class="pp-widget reveal" id="w-results">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Accuracy by task</p>
+          <p class="pp-widget__sub">Accuracy (%) for classification, F1 for SQuAD and DROP. The line runs from MeZO to GRZO; the black tick is first-order Adam, which needs full backpropagation memory.</p>
+        </div>
+        <div class="pp-seg" id="seg-model" role="group" aria-label="Model">
+          <button type="button" data-value="llama" aria-pressed="true">Llama3-8B</button>
+          <button type="button" data-value="opt" aria-pressed="false">OPT-13B</button>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-results"></div>
+      <div class="pp-legend"><span><i style="background:var(--s-mezo)"></i>MeZO</span><span><i style="background:var(--s-fzoo)"></i>FZOO</span><span><i style="background:var(--s-ours)"></i>GRZO (ours)</span><span><i class="tick"></i>Adam (first-order)</span></div>
+      <details class="pp-details"><summary>Show the full table (incl. LoRA)</summary><div class="pp-tablewrap" id="table-results"></div></details>
+    </div>
+    <figure class="pp-figure reveal">
+      <img src="{{ site.baseurl }}/images/papers/grzo-alltasks.png" alt="Training loss curves on four tasks against steps and wall-clock time">
+      <figcaption><strong>Faster in steps and on the clock.</strong> Training loss on Llama3-8B (RTE, MultiRC) and OPT-13B (SQuAD, DROP), against training steps and wall-clock time. GRZO's 23% per-step premium is repaid: it reaches any given loss level sooner. (Figure from the paper, where GRZO is drawn in red.)</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="pp-section" id="cost">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Cost</p>
+    <h2 class="pp-h2 reveal">What the extra B&minus;1 directions cost.</h2>
+    <p class="pp-lead reveal">Production profile on Llama3-8B (RTE, fp16, B&nbsp;=&nbsp;16, 4&times;A100). Memory: <strong>+0.08&nbsp;GB</strong>, or 0.5% above the forward-only floor &mdash; GRZO does not use less memory than an in-place MeZO, it gets B directions at the same footprint. Time: <strong>+23%</strong> per step, from fusing the per-example perturbation into the forward pass.</p>
+    <div class="pp-widget reveal" id="w-cost">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Peak memory and per-step time</p>
+          <p class="pp-widget__sub">Each ZO variant paired with its GRZO version. Every bar starts at zero; the vertical line marks the 17.74&nbsp;GB forward-only inference peak.</p>
+        </div>
+        <div class="pp-seg" id="seg-pair" role="group" aria-label="Pairing">
+          <button type="button" data-value="vanilla" aria-pressed="true">Vanilla</button>
+          <button type="button" data-value="lozo" aria-pressed="false">Low-rank</button>
+          <button type="button" data-value="sparse" aria-pressed="false">Sparse</button>
+          <button type="button" data-value="quant" aria-pressed="false">Quantized*</button>
+        </div>
+      </div>
+      <div class="pp-twin" style="gap:22px">
+        <div><p class="pp-panel__label" style="margin:0 0 .4rem"><b>Peak GPU memory</b><span>GB</span></p><div class="pp-chart" id="chart-mem"></div></div>
+        <div><p class="pp-panel__label" style="margin:0 0 .4rem"><b>Per-step time</b><span>ms</span></p><div class="pp-chart" id="chart-time"></div></div>
+      </div>
+      <div class="pp-legend" id="legend-time"></div>
+      <p class="pp-caption" id="cost-note"></p>
+    </div>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="dropin">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Drop-in</p>
+    <h2 class="pp-h2 reveal">Swap the MeZO core, lift every variant.</h2>
+    <p class="pp-lead reveal">Sparse, low-rank and quantized ZO methods all sit on top of a MeZO-style estimator. Replacing that core with GRZO &mdash; and changing nothing else &mdash; improves the paired method on 14 of 15 task&ndash;variant combinations, by <strong>+4.9</strong> on average (Llama3-8B).</p>
+    <div class="pp-widget reveal" id="w-dropin">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Variant before → after</p>
+          <p class="pp-widget__sub">Each row moves from the published variant (left dot) to the same variant with the GRZO core (right dot). The hollow ring is vanilla GRZO for reference.</p>
+        </div>
+        <div class="pp-seg" id="seg-var" role="group" aria-label="Variant">
+          <button type="button" data-value="sparse" aria-pressed="true">Sparse</button>
+          <button type="button" data-value="lozo" aria-pressed="false">Low-rank</button>
+          <button type="button" data-value="quant" aria-pressed="false">Quantized</button>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-dropin"></div>
+      <div class="pp-legend" id="legend-dropin"></div>
+    </div>
+    <p class="pp-takeaway reveal"><b>Takeaway.</b> The B per-example directions are orthogonal to how a variant restricts or compresses the update, so the gains stack.</p>
+  </div>
+</section>
