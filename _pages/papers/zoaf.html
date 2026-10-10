@@ -18,7 +18,7 @@ paper:
   author_aff: [1, 1, 1, 2, 2, 1]
   affiliations:
     - University of California, Santa Barbara
-    - National Institute of Standards and Technology, Boulder
+    - National Institute of Standards and Technology
   venue: "Under review"
   venue_meta: "arXiv preprint"
   year: 2026
@@ -90,10 +90,23 @@ paper:
     <p class="pp-lead reveal">Sizing an analog/RF circuit means tuning resistors, capacitors, device sizes and biases until gain, bandwidth, ripple or return loss meet their targets. Every candidate costs a SPICE or EM simulation, and commercial simulators expose no gradients, so adjoint-based optimization is off the table.</p>
     <p class="reveal">The usual answers each pay a price. Surrogate-based Bayesian optimization has to fit and tune a model of the circuit response; population heuristics such as CMA-ES, DE and PSO burn through the simulator budget. <strong>ZOAF</strong> takes a third route: it estimates descent directions from a handful of <strong>paired black-box simulations</strong> and takes gradient-style steps, with no surrogate and no simulator hooks.</p>
     <div class="pp-tldr reveal"><b>TL;DR</b><p>Across an RF matching network and two amplifiers under equal simulator-call budgets, ZOAF reaches the <strong>best median final value on every reported figure of merit</strong>, has the most robust worst case across seeds, and matches each baseline's final median with <strong>1.3&ndash;3.8&times; fewer simulator calls</strong>.</p></div>
-    <figure class="pp-figure reveal">
+    <div class="pp-widget reveal" id="w-flow">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">How ZOAF spends a simulator budget <span class="pp-tag">Interactive</span></p>
+          <p class="pp-widget__sub">The whole method on one page: a quasi-random pool, cheap random-direction steps, precise coordinate steps, and a monitor that decides when to switch or restart. The replay is a real ZOAF run on a toy landscape; click a stage to read what it does.</p>
+        </div>
+        <div class="pp-pipe__btns"><button type="button" class="pp-btn pp-btn--sm" id="flow-reset">Reset</button><button type="button" class="pp-btn pp-btn--sm" id="flow-step">Step</button><button type="button" class="pp-btn pp-btn--sm pp-btn--primary" id="flow-play">Play</button></div>
+      </div>
+      <div class="pp-chart" id="chart-flow"></div>
+      <p class="pp-pipe__cap" id="flow-cap" aria-live="polite" style="margin-top:.6rem"></p>
+    </div>
+    <details class="pp-details reveal"><summary>The paper&rsquo;s static figure</summary>
+    <figure class="pp-figure" style="margin-top:.8rem">
       <img src="{{ site.baseurl }}/images/papers/zoaf-method.png" alt="Multi-start clipped zeroth-order optimizer illustrated on a multimodal landscape">
       <figcaption><strong>The multi-start clipped ZO optimizer.</strong> A one-shot quasi-random pool places a handful of candidates on a rugged objective; each step estimates a descent direction from a few black-box probes, and box-projected updates carry the surviving start to the optimum while a poor start is stopped early.</figcaption>
     </figure>
+    </details>
   </div>
 </section>
 

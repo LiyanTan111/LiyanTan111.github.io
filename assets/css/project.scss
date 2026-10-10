@@ -340,3 +340,43 @@ body.pp {
 @media (max-width: 560px) {
   .pp-math { font-size: .8rem; padding: .8rem .6rem; }
 }
+
+/* ---------- GRZO 交互主图 ---------- */
+.pp-steps { display: flex; gap: 6px; margin: .9rem 0 .2rem; overflow-x: auto; scrollbar-width: none; }
+.pp-steps button { flex: 1 1 0; min-width: max-content; display: inline-flex; align-items: center; gap: .55em; padding: .55rem .8rem; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font: 500 .86rem var(--sans); color: var(--muted); cursor: pointer; transition: all .2s; }
+.pp-steps button b { display: inline-grid; place-items: center; width: 1.45em; height: 1.45em; border-radius: 50%; background: var(--line-soft); color: var(--muted); font-size: .78rem; }
+.pp-steps button:hover { border-color: rgba(56, 102, 170, .45); color: var(--ink); }
+.pp-steps button[aria-pressed=true] { border-color: var(--accent); color: var(--ink); background: var(--accent-soft); }
+.pp-steps button[aria-pressed=true] b { background: var(--accent); color: #fff; }
+.pp-pipe__cap { min-height: 3.1em; margin: .7rem 0 .2rem; font-size: .93rem; color: var(--text); max-width: none !important; }
+.pp-pipe__stage svg text { font-family: var(--sans); }
+.pp-pipe__detail { min-height: 1.5em; margin: .3rem 0 .6rem; font: 500 .82rem/1.45 var(--sans); color: var(--accent-ink); font-variant-numeric: tabular-nums; max-width: none !important; }
+.pp-pipe__ctrl { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; padding-top: .8rem; border-top: 1px solid var(--line-soft); }
+.pp-pipe__ex { display: flex; align-items: center; gap: 6px; font-size: .84rem; color: var(--muted); }
+.pp-pipe__ex span { margin-right: 4px; }
+.pp-pipe__ex button { width: 34px; height: 30px; border-radius: 8px; border: 1.5px solid var(--c); background: var(--surface); color: var(--c); font: 700 .8rem var(--sans); cursor: pointer; transition: all .15s; }
+.pp-pipe__ex button[aria-pressed=true] { background: var(--c); color: #fff; }
+.pp-pipe__btns { display: flex; gap: 8px; margin-left: auto; }
+#pipe-scale-wrap input[type=range] { width: 140px; }
+@keyframes ppflip { 0% { transform: scaleX(1); } 50% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+.pp-flip { transform-box: fill-box; transform-origin: center; animation: ppflip .5s ease both; }
+@keyframes ppfade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.pp-stage-in { animation: ppfade .35s ease both; }
+@media (prefers-reduced-motion: reduce) { .pp-flip, .pp-stage-in { animation: none; } }
+
+/* ---------- 常识推理表 ---------- */
+.pp-table--cs td.grp-label { font-size: .72rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: #f7f9fc; border-right: 1px solid var(--line-soft); white-space: normal; width: 6.5em; text-align: center !important; vertical-align: middle; }
+.pp-table--cs tr.grp td { border-top: 2px solid var(--line); }
+.pp-table--cs td.best { font-weight: 700; color: var(--ink); }
+.pp-table--cs .avg { border-left: 1px solid var(--line-soft); }
+.pp-table--cs th.avg { color: var(--accent-ink); }
+.pp-table--cs td.avg { font-weight: 500; }
+.pp-table--cs td.avg.best { font-weight: 700; }
+.pp-table--cs .col-on { background: rgba(56, 102, 170, .08); }
+.pp-table--cs tr.ours td.col-on { background: #d6e3f4; }
+.pp-table--cs td.m { text-align: left !important; }
+.pp-table--cs td.v { text-align: center !important; }
+.pp-table--cs tr.ours td.grp-label { background: #f7f9fc; color: var(--muted); font-weight: 700; }
+
+.pp-check { display: inline-flex; align-items: center; gap: .5em; font-size: .86rem; color: var(--ink); cursor: pointer; white-space: nowrap; }
+.pp-check input { width: 16px; height: 16px; accent-color: var(--accent); }

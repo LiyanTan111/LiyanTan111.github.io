@@ -19,6 +19,398 @@
   });
 
   /* =====================================================================
+     0) 交互式主图：MeZO 与 GRZO 一步更新的四个阶段（玩具层 5×6，B = 4）
+     ===================================================================== */
+  (function pipeline() {
+    var root = document.getElementById('w-pipe'); if (!root) return;
+    var host = document.getElementById('chart-pipe'), capEl = document.getElementById('pipe-cap'), detEl = document.getElementById('pipe-detail');
+    var DO = 5, DI = 6, B = 4, SIG = 0.1, ALIGN = 0.5;
+    var EXC = ['#3866aa', '#cf8c4a', '#2a8a6b', '#8a63b8'], SUB = ['₁', '₂', '₃', '₄'];
+    var WARM = [196, 111, 60], COOL = [47, 95, 158];
+    var mode = 'grzo', step = 0, ex = 0, seed = 11, scale = 1, auto = true, autoT = 0, prevMask = null, S, AVG;
+    function mul(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+    function gs(r) { var u = 0, w = 0; while (u === 0) u = r(); while (w === 0) w = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * w); }
+    function mat(f) { var m = []; for (var j = 0; j < DO; j++) { m.push([]); for (var k = 0; k < DI; k++) m[j].push(f(j, k)); } return m; }
+    function flat(m) { return [].concat.apply([], m); }
+    function dot(a, b) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i] * b[i]; return s; }
+    function nrm(a) { return Math.sqrt(dot(a, a)); }
+    function cos(a, b) { return dot(a, b) / (nrm(a) * nrm(b) || 1); }
+    function sign(r) { return r() < 0.5 ? -1 : 1; }
+
+    /* 一次采样：同一组逐样本梯度下，分别算 MeZO 与 GRZO 的估计 */
+    function sample(r) {
+      var U = mat(function () { return gs(r); }), zm = mat(function () { return gs(r); });
+      var u = []; for (var q = 0; q < DO * DI; q++) u.push(gs(r)); var un = nrm(u); u = u.map(function (v) { return v / un; });
+      var R = [], Sg = [], Z = [], G = [], X = [], L0 = [];
+      for (var i = 0; i < B; i++) {
+        var ri = [], si = [], j, k; for (j = 0; j < DO; j++) ri.push(sign(r)); for (k = 0; k < DI; k++) si.push(sign(r));
+        R.push(ri); Sg.push(si);
+        Z.push(mat(function (j2, k2) { return U[j2][k2] * ri[j2] * si[k2]; }));
+        var n = []; for (q = 0; q < DO * DI; q++) n.push(gs(r)); var nn = nrm(n);
+        G.push(u.map(function (v, q2) { return 0.8 * (Math.sqrt(ALIGN) * v + Math.sqrt(1 - ALIGN) * n[q2] / nn); }));
+        var xi = []; for (k = 0; k < DI; k++) xi.push(Math.round(gs(r) * 10) / 10 || 0.3); X.push(xi);
+        L0.push(0.6 + 0.15 * r());
+      }
+      var gbar = G[0].map(function (v, q2) { return (G[0][q2] + G[1][q2] + G[2][q2] + G[3][q2]) / B; });
+      var dG = [], lpG = [], lmG = [], lpM = [], lmM = [];
+      for (i = 0; i < B; i++) {
+        var a = dot(G[i], flat(Z[i])), b = dot(G[i], flat(zm));
+        lpG.push(L0[i] + SIG * a); lmG.push(L0[i] - SIG * a); dG.push(2 * SIG * a);
+        lpM.push(L0[i] + SIG * b); lmM.push(L0[i] - SIG * b);
+      }
+      var mean = function (v) { return v.reduce(function (x, y) { return x + y; }, 0) / v.length; };
+      var dm = mean(dG), sd = Math.sqrt(mean(dG.map(function (d) { return (d - dm) * (d - dm); })));
+      var A = dG.map(function (d) { return d / (sd + 1e-8); });
+      var Lp = mean(lpM), Lm = mean(lmM), dM = Lp - Lm;
+      var gG = flat(Z[0]).map(function (v, q2) { var s = 0; for (var i2 = 0; i2 < B; i2++) s += A[i2] * flat(Z[i2])[q2]; return s / (2 * SIG * B); });
+      var gM = flat(zm).map(function (v) { return dM / (2 * SIG) * v; });
+      return { U: U, zm: zm, R: R, S: Sg, Z: Z, X: X, gbar: gbar, lpG: lpG, lmG: lmG, dG: dG, sd: sd, A: A, lpM: lpM, lmM: lmM, Lp: Lp, Lm: Lm, dM: dM,
+               gG: gG, gM: gM, cG: cos(gG, gbar), cM: cos(gM, gbar), W: mat(function () { return Math.round(gs(r) * 5) / 10; }) };
+    }
+    function redraw() { S = sample(mul(seed * 7919 + 13)); }
+    (function avg() { var r = mul(424242), cg = 0, cm = 0, n = 400; for (var t = 0; t < n; t++) { var o = sample(r); cg += o.cG; cm += o.cM; } AVG = { g: cg / n, m: cm / n }; })();
+
+    function mix(t, rgb) { t = Math.max(0, Math.min(1, t)); return 'rgb(' + Math.round(255 + (rgb[0] - 255) * t) + ',' + Math.round(255 + (rgb[1] - 255) * t) + ',' + Math.round(255 + (rgb[2] - 255) * t) + ')'; }
+    function vcol(v, k) { return v >= 0 ? mix(Math.abs(v) / (k || 2.2), WARM) : mix(Math.abs(v) / (k || 2.2), COOL); }
+    function f2(v) { return (v < 0 ? '−' : '') + Math.abs(v).toFixed(2); }
+    function sg(v) { return v > 0 ? '+1' : '−1'; }
+    /* 画矩阵：返回单元格引用 */
+    function grid(g, x0, y0, cs, m, o) {
+      o = o || {}; var cells = [];
+      for (var j = 0; j < m.length; j++) { cells.push([]); for (var k = 0; k < m[j].length; k++) {
+        var v = m[j][k], isSign = o.signs, fill = isSign ? (v > 0 ? '#f6e1cf' : '#d9e5f4') : vcol(v, o.k);
+        var c = svg('rect', { x: x0 + k * cs, y: y0 + j * cs, width: cs - 2, height: cs - 2, rx: Math.min(4, cs / 6), fill: fill, stroke: o.stroke || 'rgba(24,32,44,.08)' }, g);
+        if (o.flip && o.flip[j] && o.flip[j][k]) { c.setAttribute('class', 'pp-flip'); c.style.animationDelay = ((j + k) * 45) + 'ms'; }
+        if (isSign && cs >= 18) text(g, x0 + k * cs + (cs - 2) / 2, y0 + j * cs + cs / 2 + 3, v > 0 ? '+' : '−', { 'text-anchor': 'middle', 'font-size': cs * 0.45, 'font-weight': 600, fill: v > 0 ? '#9a5422' : '#2a4e86', 'pointer-events': 'none' });
+        cells[j].push(c);
+      } }
+      if (o.border) svg('rect', { x: x0 - 3, y: y0 - 3, width: m[0].length * cs + 4, height: m.length * cs + 4, rx: 6, fill: 'none', stroke: o.border, 'stroke-width': o.bw || 2 }, g);
+      return cells;
+    }
+    function vec(g, x0, y0, cs, arr, vertical, o) { var m = vertical ? arr.map(function (v) { return [v]; }) : [arr]; return grid(g, x0, y0, cs, m, o).map(function (row) { return row; }); }
+    function label(g, x, y, str, o) { return text(g, x, y, str, Object.assign({ 'text-anchor': 'middle', 'font-size': 12, fill: C.muted }, o || {})); }
+    function op(g, x, y, str) { return text(g, x, y, str, { 'text-anchor': 'middle', 'font-size': 20, fill: C.ink, 'font-weight': 500 }); }
+    function chip(g, x, y, i, r) { svg('circle', { cx: x, cy: y, r: r || 11, fill: EXC[i] }, g); text(g, x, y + 4, 'x' + (i + 1), { 'text-anchor': 'middle', 'font-size': 10.5, 'font-weight': 700, fill: '#fff' }); }
+
+    var CAP = [
+      { mezo: 'MeZO draws one random direction z for the whole layer. Every example in the batch is evaluated at the same W ± σz, so the step can only move along z: the four examples give one direction, and the four directions below are perfectly correlated.',
+        grzo: 'GRZO draws one shared base U, then gives each example its own sign vectors: rᵢ flips rows, sᵢ flips columns. ΔWᵢ = U ⊙ (rᵢsᵢᵀ) keeps U’s magnitudes but not its signs, so every example gets a different, decorrelated direction from the same U. Hover a cell of ΔWᵢ.' },
+      { mezo: 'Forward: MeZO perturbs the weights in place, so every input sees the same W ± σz. Two forward passes (+ and −) give the losses for the whole batch.',
+        grzo: 'ΔWᵢ is never built. Flip the input’s signs with sᵢ, multiply by the shared U, flip the result’s signs with rᵢ: that is exactly ΔWᵢ xᵢ. Added to W xᵢ with ±σ, both branches for all B examples still take two forward passes.' },
+      { mezo: 'MeZO averages the batch before differencing, so the B examples collapse into a single number δ = L⁺ − L⁻. Its size, and therefore the step, follows the loss scale: drag the slider.',
+        grzo: 'GRZO keeps one loss difference per example, δᵢ = ℓᵢ⁺ − ℓᵢ⁻, and divides by their within-batch standard deviation, like GRPO advantages. Drag the loss scale: the δᵢ grow and shrink, the weights aᵢ do not.' },
+      { mezo: 'The update is δ/(2σ) · z: one direction per step, however large the batch. Its cosine to the true batch gradient ḡ is small on average.',
+        grzo: 'The update sums B weighted directions, ĝ = 1/(2σB) Σ aᵢ zᵢ. In code it is W ← W − η/(2σ) · U ⊙ M̄ with M̄ = (1/B) Σ aᵢ rᵢsᵢᵀ, and U regenerated from its seed: no per-example tensor is ever stored.' }
+    ];
+    var STEP_NAMES = ['Perturb', 'Forward ±', 'Weigh', 'Update'];
+
+    /* ---------- 阶段 1：扰动 ---------- */
+    function stage0(s, VW, narrow) {
+      var cs = narrow ? 21 : 27, gw = DI * cs, gh = DO * cs, y0 = mode === 'grzo' ? 54 : 18, H;
+      var i = ex, Ri = S.R[i], Si = S.S[i], mask = mat(function (j, k) { return Ri[j] * Si[k]; }), Zi = S.Z[i];
+      var flip = prevMask ? mat(function (j, k) { return prevMask[j][k] !== mask[j][k]; }) : null;
+      var refs = {};
+      if (mode === 'grzo') {
+        var rx = narrow ? 6 : 24, mx = rx + cs + 6, Ux, Dx, Dy = y0;
+        if (narrow) { Ux = mx + gw + 26; Dx = (VW - gw) / 2; Dy = y0 + gh + 66; } else { Ux = mx + gw + 46; Dx = Ux + gw + 46; }
+        label(s, rx + cs / 2 - 1, y0 - cs - 12, 'r' + 'ᵢ', { fill: EXC[i], 'font-weight': 700, 'font-size': 13 });
+        text(s, mx - 8, y0 - cs / 2 - 2, 's' + 'ᵢ', { 'text-anchor': 'end', fill: EXC[i], 'font-weight': 700, 'font-size': 13 });
+        refs.s = vec(s, mx, y0 - cs - 6, cs, Si, false, { signs: true, flip: null })[0];
+        refs.r = vec(s, rx, y0, cs, Ri, true, { signs: true });
+        refs.m = grid(s, mx, y0, cs, mask, { signs: true, flip: flip, border: EXC[i] });
+        label(s, mx + gw / 2, y0 + gh + 18, 'sign mask rᵢ sᵢᵀ');
+        op(s, mx + gw + (Ux - mx - gw) / 2 - 1, y0 + gh / 2 + 7, '⊙');
+        refs.U = grid(s, Ux, y0, cs, S.U);
+        label(s, Ux + gw / 2, y0 + gh + 18, 'U · shared by all examples');
+        if (narrow) op(s, VW / 2, Dy - 12, '=');
+        else op(s, Ux + gw + 23, y0 + gh / 2 + 7, '=');
+        refs.D = grid(s, Dx, Dy, cs, Zi, { flip: flip, border: EXC[i], bw: 2.5 });
+        label(s, Dx + gw / 2, Dy + gh + 18, 'ΔW' + 'ᵢ' + ' = U ⊙ (rᵢ sᵢᵀ)', { fill: C.ink, 'font-weight': 600 });
+        /* 悬停：显示一个单元格是怎么来的 */
+        refs.D.forEach(function (row, j) { row.forEach(function (c, k) {
+          c.style.cursor = 'pointer';
+          c.addEventListener('pointerenter', function () {
+            auto = false; [refs.r[j][0], refs.s[k], refs.m[j][k], refs.U[j][k], c].forEach(function (e) { e.setAttribute('stroke', C.ink); e.setAttribute('stroke-width', 2); });
+            detEl.textContent = 'ΔW' + SUB[i] + '[' + (j + 1) + ',' + (k + 1) + '] = U[' + (j + 1) + ',' + (k + 1) + '] × r' + SUB[i] + '[' + (j + 1) + '] × s' + SUB[i] + '[' + (k + 1) + '] = ' + f2(S.U[j][k]) + ' × (' + sg(Ri[j]) + ') × (' + sg(Si[k]) + ') = ' + f2(Zi[j][k]);
+          });
+          c.addEventListener('pointerleave', function () { [refs.r[j][0], refs.s[k], refs.m[j][k], refs.U[j][k], c].forEach(function (e) { e.setAttribute('stroke', 'rgba(24,32,44,.08)'); e.setAttribute('stroke-width', 1); }); });
+        }); });
+        H = Dy + gh + 34;
+      } else {
+        var zx = narrow ? (VW - gw) / 2 : VW / 2 - gw / 2 + 60, cx0 = narrow ? 30 : zx - 150;
+        if (!narrow) {
+          for (var e = 0; e < B; e++) { var cy = y0 + 10 + e * (gh - 20) / 3; chip(s, cx0, cy, e); svg('path', { d: 'M' + (cx0 + 14) + ',' + cy + 'C' + (cx0 + 80) + ',' + cy + ' ' + (zx - 70) + ',' + (y0 + gh / 2) + ' ' + (zx - 8) + ',' + (y0 + gh / 2), fill: 'none', stroke: EXC[e], 'stroke-width': 1.6, 'stroke-opacity': .7 }, s); }
+        }
+        refs.D = grid(s, zx, y0, cs, S.zm, { border: C.muted, bw: 2 });
+        label(s, zx + gw / 2, y0 + gh + 18, 'z · one direction for the whole batch', { fill: C.ink, 'font-weight': 600 });
+        refs.D.forEach(function (row, j) { row.forEach(function (c, k) { c.addEventListener('pointerenter', function () { detEl.textContent = 'z[' + (j + 1) + ',' + (k + 1) + '] = ' + f2(S.zm[j][k]) + ', the same value for every example in the batch.'; }); }); });
+        H = y0 + gh + 34;
+      }
+      /* 下方：B 个方向的缩略图 + 相关矩阵 */
+      var tcs = narrow ? 8 : 10, tw = DI * tcs, ty = H + 22, gap = narrow ? 14 : 22;
+      label(s, narrow ? 6 : 24, ty - 8, mode === 'grzo' ? 'The B = 4 per-example directions zᵢ = vec(ΔWᵢ)' : 'The direction each example contributes', { 'text-anchor': 'start', fill: C.ink, 'font-weight': 600 });
+      var tx0 = narrow ? 8 : 24, dirs = mode === 'grzo' ? S.Z : [S.zm, S.zm, S.zm, S.zm];
+      dirs.forEach(function (Zk, t) {
+        var x = tx0 + t * (tw + gap), g = svg('g', { style: 'cursor:pointer' }, s);
+        grid(g, x, ty + 8, tcs, Zk, { stroke: 'none', border: t === i && mode === 'grzo' ? EXC[t] : 'rgba(24,32,44,.15)', bw: t === i && mode === 'grzo' ? 2.5 : 1 });
+        chip(g, x + tw / 2 - 1, ty + 8 + DO * tcs + 16, t, 9);
+        g.addEventListener('click', function () { auto = false; setEx(t); });
+      });
+      /* 相关矩阵 */
+      var Zf = dirs.map(flat), mcs = narrow ? 20 : 26, mx0 = narrow ? tx0 + 4 * (tw + gap) + 4 : tx0 + 4 * (tw + gap) + 40, my0 = ty + 8;
+      if (narrow) { mx0 = VW - 4 * mcs - 8; my0 = ty + DO * tcs + 46; }
+      label(s, mx0 + 2 * mcs, my0 - 6 + (narrow ? 0 : 0), 'corr(zᵢ, zⱼ)', { 'font-size': 11 });
+      for (var a = 0; a < B; a++) for (var b = 0; b < B; b++) {
+        var cc = cos(Zf[a], Zf[b]);
+        svg('rect', { x: mx0 + b * mcs, y: my0 + 4 + a * mcs, width: mcs - 2, height: mcs - 2, rx: 3, fill: mix(Math.abs(cc), [56, 102, 170]) }, s);
+        text(s, mx0 + b * mcs + (mcs - 2) / 2, my0 + 4 + a * mcs + mcs / 2 + 2, Math.abs(cc) > 0.995 ? '1' : cc.toFixed(1).replace('-0.0', '0.0').replace('-', '−'), { 'text-anchor': 'middle', 'font-size': narrow ? 8.5 : 9.5, fill: Math.abs(cc) > 0.55 ? '#fff' : C.text });
+      }
+      if (narrow) H = my0 + 4 + B * mcs + 8; else H = Math.max(ty + 8 + DO * tcs + 34, my0 + 4 + B * mcs + 8);
+      prevMask = mask;
+      return H;
+    }
+
+    /* ---------- 阶段 2：前向 ---------- */
+    function stage1(s, VW, narrow) {
+      var cs = narrow ? 19 : 25, i = ex, x = S.X[i], y0 = 40, H;
+      function col(x0, arr, name, o) { o = o || {}; var cells = vec(s, x0, y0 + (o.dy || 0), cs, arr, true, o); label(s, x0 + cs / 2 - 1, y0 + (o.dy || 0) + arr.length * cs + 16, name, { fill: o.lc || C.muted, 'font-size': 11.5, 'font-weight': o.bold ? 600 : 400 }); return cells; }
+      var Wx = S.W.map(function (row) { return dot(row, x); });
+      if (mode === 'grzo') {
+        var Si = S.S[i], Ri = S.R[i], xs = x.map(function (v, k) { return v * Si[k]; }), Ux = S.U.map(function (row) { return dot(row, xs); }), p = Ux.map(function (v, j) { return v * Ri[j]; });
+        var yP = Wx.map(function (v, j) { return v + SIG * 3 * p[j]; }), yM = Wx.map(function (v, j) { return v - SIG * 3 * p[j]; });
+        var check = S.Z[i].map(function (row) { return dot(row, x); });
+        var step = narrow ? 30 : 52, X0 = narrow ? 6 : 20, k2;
+        if (!narrow) {
+          col(X0, x, 'x' + SUB[i], { k: 2.5, border: EXC[i] });
+          op(s, X0 + cs + step / 2, y0 + 3 * cs + 7, '⊙');
+          col(X0 + cs + step, Si, 's' + SUB[i], { signs: true, dy: 0 });
+          op(s, X0 + 2 * cs + step * 1.5, y0 + 3 * cs + 7, '=');
+          var xsc = col(X0 + 2 * cs + 2 * step, xs, 'x ⊙ s', { k: 2.5 });
+          var Ux0 = X0 + 3 * cs + 3 * step - 10;
+          op(s, Ux0 - step / 2 + 5, y0 + 3 * cs + 7, '→');
+          grid(s, Ux0, y0 + cs / 2, cs * 0.8, S.U, {});
+          label(s, Ux0 + DI * cs * 0.4, y0 + cs / 2 + DO * cs * 0.8 + 16, 'U ·', { 'font-size': 11.5 });
+          var Ucol = Ux0 + DI * cs * 0.8 + step - 6;
+          op(s, Ucol - step / 2 + 2, y0 + 3 * cs + 7, '=');
+          col(Ucol, Ux, 'U(x⊙s)', { k: 4, dy: cs / 2 });
+          op(s, Ucol + cs + step / 2, y0 + 3 * cs + 7, '⊙');
+          col(Ucol + cs + step, Ri, 'r' + SUB[i], { signs: true, dy: cs / 2 });
+          op(s, Ucol + 2 * cs + step * 1.5, y0 + 3 * cs + 7, '=');
+          col(Ucol + 2 * cs + 2 * step, p, 'p' + SUB[i], { k: 4, dy: cs / 2, border: EXC[i], lc: C.ink, bold: true });
+          H = y0 + DO * cs + cs / 2 + 30;
+        } else {
+          col(X0, x, 'x' + SUB[i], { k: 2.5, border: EXC[i] });
+          op(s, X0 + cs + 14, y0 + 3 * cs + 7, '⊙');
+          col(X0 + cs + 28, Si, 's' + SUB[i], { signs: true });
+          op(s, X0 + 2 * cs + 42, y0 + 3 * cs + 7, '=');
+          col(X0 + 2 * cs + 56, xs, 'x⊙s', { k: 2.5 });
+          var gx = X0 + 3 * cs + 80; op(s, gx - 12, y0 + 3 * cs + 7, '→');
+          grid(s, gx, y0 + cs / 2, cs * 0.75, S.U, {}); label(s, gx + DI * cs * 0.375, y0 + cs / 2 + DO * cs * 0.75 + 16, 'U ·', { 'font-size': 11 });
+          var y1 = y0 + DO * cs + 60;
+          col(X0 + 20, Ux, 'U(x⊙s)', { k: 4, dy: y1 - y0 });
+          op(s, X0 + 20 + cs + 22, y1 + 2.5 * cs + 7, '⊙');
+          col(X0 + 2 * cs + 64, Ri, 'r' + SUB[i], { signs: true, dy: y1 - y0 });
+          op(s, X0 + 3 * cs + 86, y1 + 2.5 * cs + 7, '=');
+          col(X0 + 3 * cs + 108, p, 'p' + SUB[i], { k: 4, dy: y1 - y0, border: EXC[i], lc: C.ink, bold: true });
+          H = y1 + DO * cs + 30;
+        }
+        var yb = H + 30;
+        text(s, narrow ? 6 : 20, yb, 'p' + SUB[i] + ' = ΔW' + SUB[i] + ' x' + SUB[i] + '   (check: ΔW' + SUB[i] + ' x' + SUB[i] + ' = [' + check.map(function (v) { return v.toFixed(2); }).join(', ') + '])', { 'font-size': narrow ? 10 : 11.5, fill: C.muted });
+        text(s, narrow ? 6 : 20, yb + 22, 'y' + SUB[i] + '± = W x' + SUB[i] + ' ± σ p' + SUB[i] + ' — every example gets its own pᵢ from the same U.', { 'font-size': narrow ? 10.5 : 12.5, fill: C.ink, 'font-weight': 600 });
+        H = yb + 34;
+      } else {
+        var zx = S.zm.map(function (row) { return dot(row, x); }), X1 = narrow ? 6 : 20, g2 = narrow ? 22 : 46;
+        col(X1, x, 'x' + SUB[i], { k: 2.5, border: EXC[i] });
+        op(s, X1 + cs + g2 / 2, y0 + 3 * cs + 7, '→');
+        var gx2 = X1 + cs + g2; grid(s, gx2, y0 + cs / 2, cs * 0.8, S.zm, { border: C.muted, bw: 1.5 }); label(s, gx2 + DI * cs * 0.4, y0 + cs / 2 + DO * cs * 0.8 + 16, 'z ·  (same for all xᵢ)', { 'font-size': 11 });
+        var c3 = gx2 + DI * cs * 0.8 + g2; op(s, c3 - g2 / 2 + 2, y0 + 3 * cs + 7, '=');
+        col(c3, zx, 'z x' + SUB[i], { k: 4, dy: cs / 2, lc: C.ink, bold: true });
+        H = y0 + DO * cs + cs / 2 + 30;
+        text(s, X1, H + 30, 'y' + SUB[i] + '± = (W ± σz) x' + SUB[i] + ' — all B inputs share the one perturbed weight matrix.', { 'font-size': narrow ? 10.5 : 12.5, fill: C.ink, 'font-weight': 600 });
+        H += 42;
+      }
+      /* 两次前向的计数条 */
+      var by = H + 16, bx = narrow ? 6 : 20;
+      ['+', '−'].forEach(function (sgn, t) {
+        var yy = by + t * 30;
+        svg('rect', { x: bx, y: yy, width: narrow ? 64 : 92, height: 22, rx: 6, fill: t ? '#d9e5f4' : '#f6e1cf' }, s);
+        text(s, bx + (narrow ? 32 : 46), yy + 15, 'forward ' + sgn, { 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 600, fill: C.ink });
+        for (var e = 0; e < B; e++) chip(s, bx + (narrow ? 84 : 116) + e * 26, yy + 11, e, 9);
+        text(s, bx + (narrow ? 84 : 116) + B * 26 + 4, yy + 15, mode === 'grzo' ? (sgn === '+' ? 'W + σΔWᵢ for each xᵢ' : 'W − σΔWᵢ for each xᵢ') : (sgn === '+' ? 'all at W + σz' : 'all at W − σz'), { 'font-size': 11, fill: C.muted });
+      });
+      text(s, bx, by + 74, 'Forward passes per step: 2, for MeZO and GRZO alike.', { 'font-size': 11.5, fill: C.ink, 'font-weight': 600 });
+      return by + 84;
+    }
+
+    /* ---------- 阶段 3：加权 ---------- */
+    function stage2(s, VW, narrow) {
+      var y0 = 30, ph = 150, H = y0 + ph + 60, panels, pw, gap = narrow ? 14 : 30;
+      var Lp = S.lpG, Lm = S.lmG; if (mode === 'mezo') { Lp = S.lpM; Lm = S.lmM; }
+      var maxD = Math.max.apply(null, S.dG.map(Math.abs).concat([Math.abs(S.dM)])) * 2.1;
+      function panel(x0, y, w, title, sub) { text(s, x0, y - 10, title, { 'font-size': 12, 'font-weight': 600, fill: C.ink }); if (sub) text(s, x0 + w, y - 10, sub, { 'font-size': 11, fill: C.muted, 'text-anchor': 'end' }); }
+      function bars(x0, y, w, h, vals, lo, hi, cols, labs, fmt) {
+        var n = vals.length, bw = Math.min(30, w / n * 0.55), Y = function (v) { return y + h - (v - lo) / (hi - lo) * h; };
+        svg('line', { x1: x0, x2: x0 + w, y1: Y(0), y2: Y(0), stroke: C.line }, s);
+        vals.forEach(function (v, k) {
+          var cx = x0 + w / n * (k + 0.5), vv = Math.max(lo, Math.min(hi, v));
+          svg('rect', { x: cx - bw / 2, y: Math.min(Y(0), Y(vv)), width: bw, height: Math.max(1.5, Math.abs(Y(vv) - Y(0))), rx: 3, fill: cols[k] }, s);
+          text(s, cx, (v >= 0 ? Y(vv) - 5 : Y(vv) + 13), fmt(v), { 'text-anchor': 'middle', 'font-size': 10.5, fill: C.text, 'font-weight': 600 });
+          if (labs) labs[k](cx, y + h + 16);
+        });
+      }
+      var exLab = function (k) { return function (cx, yy) { chip(s, cx, yy, k, 9); }; };
+      if (narrow) { pw = VW - 16; }
+      else pw = (VW - 40 - 2 * gap) / 3;
+      var xs = narrow ? [8, 8, 8] : [20, 20 + pw + gap, 20 + 2 * (pw + gap)], ys = narrow ? [y0, y0 + ph + 70, y0 + 2 * (ph + 70)] : [y0, y0, y0];
+      /* 面板 1：逐样本损失 */
+      panel(xs[0], ys[0] + 6, pw, 'Per-example losses', '');
+      var lp = Lp.map(function (v) { return v * scale; }), lm = Lm.map(function (v) { return v * scale; }), vals = [], cols = [], labs = [];
+      for (var k = 0; k < B; k++) { vals.push(lp[k], lm[k]); cols.push('#e2a77e', '#8fb0dc'); labs.push(k % 1 === 0 ? exLab(k) : null); }
+      (function () {
+        var x0 = xs[0], y = ys[0] + 6, w = pw, h = ph, hi = 1.05 * 2, Y = function (v) { return y + h - v / hi * h; };
+        svg('line', { x1: x0, x2: x0 + w, y1: Y(0), y2: Y(0), stroke: C.line }, s);
+        for (var e = 0; e < B; e++) {
+          var cx = x0 + w / B * (e + 0.5), bw = Math.min(16, w / B * 0.3);
+          [[lp[e], '#e2a77e', -1], [lm[e], '#8fb0dc', 1]].forEach(function (a) { var v = Math.min(hi, a[0]); svg('rect', { x: cx + (a[2] < 0 ? -bw - 1 : 1), y: Y(v), width: bw, height: Y(0) - Y(v), rx: 2, fill: a[1] }, s); });
+          chip(s, cx, y + h + 16, e, 9);
+        }
+        text(s, x0 + w - 40, y - 10, '■ ℓ⁺', { 'text-anchor': 'end', 'font-size': 11, fill: '#c4703c', 'font-weight': 600 }); text(s, x0 + w, y - 10, '■ ℓ⁻', { 'text-anchor': 'end', 'font-size': 11, fill: '#5b80b8', 'font-weight': 600 });
+      })();
+      if (mode === 'grzo') {
+        var d = S.dG.map(function (v) { return v * scale; });
+        panel(xs[1], ys[1] + 6, pw, 'δᵢ = ℓᵢ⁺ − ℓᵢ⁻', 'grows with loss scale');
+        bars(xs[1], ys[1] + 6, pw, ph, d, -maxD, maxD, EXC, [0, 1, 2, 3].map(exLab), function (v) { return f2(v); });
+        panel(xs[2], ys[2] + 6, pw, 'aᵢ = δᵢ / (s + ε)', 's = ' + (S.sd * scale).toFixed(3));
+        bars(xs[2], ys[2] + 6, pw, ph, S.A, -2.4, 2.4, EXC, [0, 1, 2, 3].map(exLab), function (v) { return f2(v); });
+      } else {
+        panel(xs[1], ys[1] + 6, pw, 'Batch means', 'L⁺ / L⁻');
+        bars(xs[1], ys[1] + 6, pw, ph, [S.Lp * scale, S.Lm * scale], 0, 2.1, ['#e2a77e', '#8fb0dc'], [function (cx, yy) { label(s, cx, yy + 4, 'L⁺', { 'font-weight': 600 }); }, function (cx, yy) { label(s, cx, yy + 4, 'L⁻', { 'font-weight': 600 }); }], function (v) { return v.toFixed(2); });
+        panel(xs[2], ys[2] + 6, pw, 'δ = L⁺ − L⁻', 'one number for B examples');
+        bars(xs[2], ys[2] + 6, pw, ph, [S.dM * scale], -maxD, maxD, [C.muted], [function (cx, yy) { label(s, cx, yy + 4, 'all four', { 'font-size': 11 }); }], function (v) { return f2(v); });
+      }
+      return narrow ? ys[2] + ph + 46 : H;
+    }
+
+    /* ---------- 阶段 4：更新 ---------- */
+    function stage3(s, VW, narrow) {
+      var tcs = narrow ? 8 : 11, tw = DI * tcs, th = DO * tcs, y0 = 46, x = narrow ? 6 : 20, H;
+      var kk = 0.9;
+      if (mode === 'grzo') {
+        text(s, x, y0 - 18, 'ĝ = 1/(2σB) · Σ aᵢ zᵢ', { 'font-size': 12.5, 'font-weight': 600, fill: C.ink });
+        for (var i = 0; i < B; i++) {
+          var gx = x + i * (tw + (narrow ? 20 : 34));
+          text(s, gx + tw / 2, y0 - 2, (i ? '+ ' : '') + f2(S.A[i]) + ' ×', { 'text-anchor': 'middle', 'font-size': narrow ? 9.5 : 11, fill: EXC[i], 'font-weight': 700 });
+          grid(s, gx, y0 + 6, tcs, S.Z[i], { stroke: 'none', border: EXC[i], bw: 1.5 });
+        }
+        var ex0 = x + B * (tw + (narrow ? 20 : 34)) - (narrow ? 6 : 10);
+        if (!narrow) op(s, ex0, y0 + 6 + th / 2 + 7, '=');
+      } else {
+        text(s, x, y0 - 18, 'ĝ = δ/(2σ) · z', { 'font-size': 12.5, 'font-weight': 600, fill: C.ink });
+        text(s, x + tw / 2, y0 - 2, f2(S.dM / (2 * SIG)) + ' ×', { 'text-anchor': 'middle', 'font-size': 11, fill: C.muted, 'font-weight': 700 });
+        grid(s, x, y0 + 6, tcs, S.zm, { stroke: 'none', border: C.muted, bw: 1.5 });
+        if (!narrow) op(s, x + tw + 30, y0 + 6 + th / 2 + 7, '=');
+      }
+      /* 估计 vs 真梯度 */
+      var cs = narrow ? 17 : 22, gw = DI * cs, gy = narrow ? y0 + th + 40 : y0 - 6, g1x = narrow ? x : (mode === 'grzo' ? x + B * (tw + 34) + 14 : x + tw + 60);
+      var gh = mode === 'grzo' ? S.gG : S.gM, gn = nrm(gh), bn = nrm(S.gbar);
+      var ghM = []; for (var j = 0; j < DO; j++) ghM.push(gh.slice(j * DI, j * DI + DI).map(function (v) { return v / gn * 3; }));
+      var gbM = []; for (j = 0; j < DO; j++) gbM.push(S.gbar.slice(j * DI, j * DI + DI).map(function (v) { return v / bn * 3; }));
+      grid(s, g1x, gy, cs, ghM, { k: 1.4, border: mode === 'grzo' ? C.ours : C.mezo, bw: 2.5 });
+      label(s, g1x + gw / 2, gy + DO * cs + 18, 'estimate ĝ', { fill: C.ink, 'font-weight': 600 });
+      var g2x = g1x + gw + (narrow ? 26 : 40);
+      op(s, g2x - (narrow ? 13 : 20), gy + DO * cs / 2 + 6, '∼');
+      grid(s, g2x, gy, cs, gbM, { k: 1.4, border: C.ink, bw: 1.5 });
+      label(s, g2x + gw / 2, gy + DO * cs + 18, 'true batch gradient ḡ', { fill: C.ink, 'font-weight': 600 });
+      H = gy + DO * cs + 40;
+      /* 余弦读数：这一次 + 400 次平均 */
+      var ry = H + 6, rw = narrow ? VW - 150 : 300, rx = narrow ? 150 : 240, Xr = function (v) { return rx + Math.max(0, v) / 1 * rw; };
+      text(s, x, ry - 6, 'cos(ĝ, ḡ)  ·  higher is better', { 'font-size': 12, 'font-weight': 600, fill: C.ink });
+      [[S.cM, S.cG, 'this draw'], [AVG.m, AVG.g, 'mean of 400 draws']].forEach(function (row, t) {
+        var yy = ry + 10 + t * 50;
+        text(s, x, yy + 22, row[2], { 'font-size': 11.5, fill: C.muted });
+        [[row[0], 'MeZO', C.mezo], [row[1], 'GRZO', C.ours]].forEach(function (b, u) {
+          var by = yy + u * 20, on = (u === 1) === (mode === 'grzo');
+          svg('rect', { x: rx, y: by, width: rw, height: 14, rx: 4, fill: C.soft }, s);
+          svg('rect', { x: rx, y: by, width: Math.max(2, Xr(b[0]) - rx), height: 14, rx: 4, fill: b[2], 'fill-opacity': on ? 1 : .45 }, s);
+          text(s, rx - 6, by + 11, b[1], { 'text-anchor': 'end', 'font-size': 11, fill: on ? C.ink : C.muted, 'font-weight': on ? 700 : 400 });
+          text(s, Xr(b[0]) + 6, by + 11, b[0].toFixed(2), { 'font-size': 11, fill: C.ink, 'font-weight': 600 });
+        });
+      });
+      return ry + 10 + 2 * 50 + 4;
+    }
+
+    var STAGES = [stage0, stage1, stage2, stage3];
+    function render() {
+      clear(host);
+      var cw = host.clientWidth || 760, narrow = cw < 620, VW = narrow ? 360 : 780;
+      var s = svg('svg', { viewBox: '0 0 ' + VW + ' 10', role: 'img', 'aria-label': (mode === 'grzo' ? 'GRZO' : 'MeZO') + ' — stage ' + (step + 1) + ': ' + STEP_NAMES[step], class: 'pp-stage-in' }, host);
+      var H = STAGES[step](s, VW, narrow);
+      s.setAttribute('viewBox', '0 0 ' + VW + ' ' + Math.ceil(H));
+      capEl.textContent = CAP[step][mode];
+      if (!detEl.dataset.keep) detEl.textContent = step === 0 ? (mode === 'grzo' ? 'Hover a cell of ΔWᵢ to see U × r × s; pick an example below or click a thumbnail.' : 'Hover a cell of z.') : step === 1 ? 'Pick an example to trace it through the layer.' : step === 2 ? 'Toy losses: ℓᵢ± = ℓᵢ ± σ gᵢ·zᵢ with per-example gradients gᵢ that are 50% aligned.' : 'Toy numbers: a 30-parameter layer, B = 4, per-example gradients 50% aligned. The measured Llama3-8B version is the chart further down.';
+      document.getElementById('pipe-scale-wrap').style.display = step === 2 ? '' : 'none';
+      exWrap.style.visibility = (step <= 1) ? 'visible' : 'hidden';
+      [].forEach.call(document.querySelectorAll('#pipe-steps button'), function (b) { b.setAttribute('aria-pressed', +b.getAttribute('data-step') === step ? 'true' : 'false'); });
+      [].forEach.call(exWrap.querySelectorAll('button'), function (b, k) { b.setAttribute('aria-pressed', k === ex ? 'true' : 'false'); });
+      nextBtn.textContent = step < 3 ? 'Next stage →' : (mode === 'mezo' ? 'Now try GRZO →' : 'Back to stage 1 ↺');
+    }
+    function setEx(k) { ex = k; render(); }
+    var exWrap = document.getElementById('pipe-ex'), nextBtn = document.getElementById('pipe-next');
+    for (var e = 0; e < B; e++) (function (k) {
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = 'x' + (k + 1); b.style.setProperty('--c', EXC[k]);
+      b.addEventListener('click', function () { auto = false; setEx(k); }); exWrap.appendChild(b);
+    })(e);
+    PP.segmented(document.getElementById('seg-pipe'), function (m) { mode = m; prevMask = null; render(); });
+    [].forEach.call(document.querySelectorAll('#pipe-steps button'), function (b) { b.addEventListener('click', function () { step = +b.getAttribute('data-step'); prevMask = null; render(); }); });
+    nextBtn.addEventListener('click', function () {
+      auto = false;
+      if (step < 3) step++; else if (mode === 'mezo') { mode = 'grzo'; step = 0; [].forEach.call(document.querySelectorAll('#seg-pipe button'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-value') === 'grzo' ? 'true' : 'false'); }); } else step = 0;
+      prevMask = null; render();
+    });
+    document.getElementById('pipe-resample').addEventListener('click', function () { seed++; prevMask = null; redraw(); render(); });
+    PP.slider(document.getElementById('pipe-scale'), document.getElementById('pipe-scale-out'), function (v) { return '×' + v.toFixed(2); }, function (v) { scale = v; if (S && step === 2) render(); });
+    redraw(); render(); onResize(render);
+    /* 阶段 1 自动轮换样本，直到用户交互 */
+    PP.whenVisible(root, function () {
+      if (PP.reduceMotion) return;
+      autoT = setInterval(function () { if (!auto) { clearInterval(autoT); return; } if (step === 0 && mode === 'grzo') setEx((ex + 1) % B); }, 2200);
+    });
+    root.addEventListener('pointerdown', function () { auto = false; });
+  })();
+
+  /* =====================================================================
+     0b) 常识推理表（Llama3-8B，Commonsense-170K）
+     ===================================================================== */
+  (function commonsense() {
+    var host = document.getElementById('table-cs'); if (!host) return;
+    var COLS = ['PIQA', 'SIQA', 'HellaSwag', 'WinoGrande', 'ARC-e', 'ARC-c', 'OBQA', 'Avg'];
+    var ROWS = [
+      ['Full parameter', [['GRZO', [78.7, 64.4, 74.3, 53.0, 84.2, 65.7, 60.6, 68.70], 1], ['LOZO', [70.8, 53.2, 45.0, 49.3, 68.8, 53.0, 52.0, 56.01]], ['MeZO', [76.2, 55.2, 40.5, 51.5, 67.0, 51.8, 40.8, 54.71]]]],
+      ['PEFT', [['VeRA', [76.3, 54.0, 60.1, 50.7, 77.2, 60.7, 52.6, 61.66]], ['Uni-LoRA', [76.3, 52.1, 45.1, 52.2, 74.8, 56.1, 54.8, 58.77]], ['Sparse-MeZO', [74.0, 47.4, 38.6, 51.2, 71.0, 57.8, 53.8, 56.26]]]],
+      ['4-bit', [['QuZO (4-bit)', [53.1, 45.3, 31.7, 50.1, 48.9, 40.3, 31.6, 43.00]]]]
+    ];
+    var best = COLS.map(function (c, k) { var m = -1; ROWS.forEach(function (g) { g[1].forEach(function (r) { m = Math.max(m, r[1][k]); }); }); return m; });
+    var t = document.createElement('table'); t.className = 'pp-table pp-table--cs';
+    var th = document.createElement('thead'), tr = document.createElement('tr');
+    ['', 'Method'].concat(COLS).forEach(function (c, k) { var e = document.createElement('th'); e.textContent = c; if (k > 1) e.dataset.col = k - 2; if (c === 'Avg') e.className = 'avg'; tr.appendChild(e); });
+    th.appendChild(tr); t.appendChild(th);
+    var tb = document.createElement('tbody');
+    ROWS.forEach(function (g, gi) {
+      g[1].forEach(function (r, ri) {
+        var row = document.createElement('tr'); if (r[2]) row.className = 'ours'; if (ri === 0 && gi > 0) row.classList.add('grp');
+        if (ri === 0) { var gc = document.createElement('td'); gc.className = 'grp-label'; gc.rowSpan = g[1].length; gc.textContent = g[0]; row.appendChild(gc); }
+        var n = document.createElement('td'); n.className = 'm'; n.textContent = r[0]; row.appendChild(n);
+        r[1].forEach(function (v, k) { var c = document.createElement('td'); c.textContent = k === 7 ? v.toFixed(2) : v.toFixed(1); c.dataset.col = k; if (v === best[k]) c.classList.add('best'); c.classList.add('v'); if (k === 7) c.classList.add('avg'); row.appendChild(c); });
+        tb.appendChild(row);
+      });
+    });
+    t.appendChild(tb); host.appendChild(t);
+    /* 悬停高亮整列 */
+    t.addEventListener('pointerover', function (ev) { var c = ev.target.closest('[data-col]'); [].forEach.call(t.querySelectorAll('.col-on'), function (e) { e.classList.remove('col-on'); }); if (!c) return; [].forEach.call(t.querySelectorAll('[data-col="' + c.dataset.col + '"]'), function (e) { e.classList.add('col-on'); }); });
+    t.addEventListener('pointerleave', function () { [].forEach.call(t.querySelectorAll('.col-on'), function (e) { e.classList.remove('col-on'); }); });
+  })();
+
+  /* =====================================================================
      1) 玩具模拟：MeZO 与 GRZO 的单步梯度估计与真实梯度的夹角
      ===================================================================== */
   (function toy() {

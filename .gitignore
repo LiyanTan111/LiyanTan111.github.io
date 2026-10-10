@@ -22,3 +22,4 @@ _local/
 cv/*.aux
 cv/*.log
 cv/*.out
+Claude outputs/

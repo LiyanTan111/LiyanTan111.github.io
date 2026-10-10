@@ -99,6 +99,123 @@
     return { ev: ev, curve: curve, best: best, bestP: bestP, path: path };
   }
 
+  /* =====================================================================
+     0) 主图：ZOAF 如何花掉仿真预算（状态机 + 探针示意 + 预算条，回放真实搜索轨迹）
+     ===================================================================== */
+  (function flow() {
+    var root = document.getElementById('w-flow'); if (!root) return;
+    var host = document.getElementById('chart-flow'), capEl = document.getElementById('flow-cap');
+    var BUD = 100, SEED = 14, land = makeLandscape(SEED), run = runSearch(land, 'zoaf', BUD, SEED), cur = 0, playing = false, timer = 0, heatURL = null;
+    var PH = { pool: '#a3adbb', RGE: '#f0bf86', CGE: '#d9772e', rand: '#a3adbb' };
+    /* 每个事件所在阶段的起点（重启） */
+    var restartAt = {}; run.path.forEach(function (sg) { if (sg.restart) restartAt[sg.t[0]] = true; });
+    var accepted = {}; run.path.forEach(function (sg) { sg.t.forEach(function (t, k) { if (k > 0) accepted[t] = true; }); });
+    var CAP = {
+      pool: 'Pool · a one-shot quasi-random set of M designs (Sobol / LHS), simulated once and counted in the budget. A stage starts from the best-ranked design; later restarts walk down the ranking.',
+      RGE: 'RGE · explore. Two simulations at x ± μu along a random direction u give a descent direction; take a box-clipped step and keep it only if the simulator says f improved. Cheap per step, but its error grows like d²/N.',
+      CGE: 'CGE · refine. Once the sliding window sees progress slowing, ZOAF probes every coordinate (2d simulations): costlier per step, but deterministic, so it can resolve the last fine trade-offs.',
+      restart: 'Restart · the window reports a hard stall (improvement, gradient norm and trend all flat), so the stage stops early and ZOAF restarts from the next-ranked pool design instead of burning calls in this basin.'
+    };
+    function heat() {
+      if (heatURL) return heatURL;
+      var n = 96, cv = document.createElement('canvas'); cv.width = cv.height = n;
+      var c2 = cv.getContext('2d'), img = c2.createImageData(n, n), ST = [[246, 248, 251], [214, 225, 240], [160, 186, 222], [96, 136, 192], [42, 78, 134], [24, 46, 84]];
+      for (var j = 0; j < n; j++) for (var i = 0; i < n; i++) {
+        var t = Math.pow(1 - Math.max(0, Math.min(1, land.f((i + .5) / n, 1 - (j + .5) / n))), 1.15) * (ST.length - 1), a = Math.min(ST.length - 2, Math.floor(t)), f = t - a, k = (j * n + i) * 4;
+        for (var q = 0; q < 3; q++) img.data[k + q] = ST[a][q] + (ST[a + 1][q] - ST[a][q]) * f; img.data[k + 3] = 255;
+      }
+      c2.putImageData(img, 0, 0); return heatURL = cv.toDataURL();
+    }
+    function state(i) {
+      var e = run.ev[Math.max(0, Math.min(i, run.ev.length - 1))]; if (!e) return 'pool';
+      for (var t = i; t > i - 6 && t >= 0; t--) if (restartAt[t]) return 'restart';
+      return e.phase === 'pool' ? 'pool' : e.phase;
+    }
+    function render() {
+      clear(host);
+      var cw = host.clientWidth || 760, narrow = cw < 620, VW = narrow ? 360 : 780;
+      var s = svg('svg', { viewBox: '0 0 ' + VW + ' 10', role: 'img', 'aria-label': 'ZOAF state machine and simulator budget' }, host);
+      var st = state(cur - 1), active = st === 'restart' ? 'pool' : st;
+      /* 顶部：黑盒仿真器 */
+      var x0 = narrow ? 6 : 14, nw = narrow ? 104 : 136, nh = narrow ? 62 : 70, gap = narrow ? 20 : 48, ny = 44;
+      svg('rect', { x: x0, y: 4, width: (narrow ? VW - 12 : 3 * nw + 2 * gap), height: 24, rx: 12, fill: '#18202c' }, s);
+      text(s, x0 + (narrow ? VW - 12 : 3 * nw + 2 * gap) / 2, 20, 'black-box simulator: f(x) only · no gradients, no source code', { 'text-anchor': 'middle', 'font-size': narrow ? 10 : 11.5, fill: '#fff', 'font-weight': 600 });
+      var NODES = [['pool', 'Pool', 'M designs, once'], ['RGE', 'RGE · explore', '2N calls / step'], ['CGE', 'CGE · refine', '2d calls / step']];
+      var pos = {};
+      NODES.forEach(function (n, k) {
+        var x = x0 + k * (nw + gap), on = active === n[0], g = svg('g', { style: 'cursor:pointer' }, s);
+        svg('rect', { x: x, y: ny, width: nw, height: nh, rx: 12, fill: on ? (k === 0 ? '#eef1f5' : k === 1 ? '#fdf1e3' : '#f8e3d3') : C.surface, stroke: on ? PH[n[0]] : C.line, 'stroke-width': on ? 2.5 : 1.2 }, g);
+        svg('circle', { cx: x + 14, cy: ny + 18, r: 5, fill: PH[n[0]] }, g);
+        text(g, x + 26, ny + 22, n[1], { 'font-size': narrow ? 11.5 : 13, 'font-weight': 700, fill: C.ink });
+        text(g, x + 12, ny + 44, n[2], { 'font-size': narrow ? 10 : 11.5, fill: C.muted });
+        if (!narrow) text(g, x + 12, ny + 60, k === 0 ? 'Sobol / LHS · ranked' : k === 1 ? 'random ±μu probes' : 'every axis ±μeₖ', { 'font-size': 10.5, fill: C.faint });
+        g.addEventListener('click', function () { pause(); capEl.textContent = CAP[n[0]]; });
+        pos[n[0]] = x;
+      });
+      function arrow(x1, y1, x2, y2, lab, on, curve) {
+        var d = curve ? 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + (y1 - curve) + ' ' + x2 + ',' + (y2 - curve) + ' ' + x2 + ',' + y2 : 'M' + x1 + ',' + y1 + ' L' + x2 + ',' + y2;
+        svg('path', { d: d, fill: 'none', stroke: on ? C.ink : C.faint, 'stroke-width': on ? 2 : 1.3, 'marker-end': 'url(#ar' + (on ? 1 : 0) + ')' }, s);
+        if (lab) text(s, (x1 + x2) / 2, curve ? Math.min(y1, y2) - curve * 0.78 : y1 - 8, lab, { 'text-anchor': 'middle', 'font-size': narrow ? 9 : 10.5, fill: on ? C.ink : C.muted, 'font-weight': on ? 600 : 400 });
+      }
+      var defs = svg('defs', {}, s);
+      [0, 1].forEach(function (k) { var mk = svg('marker', { id: 'ar' + k, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs); svg('path', { d: 'M0,0 L10,5 L0,10 z', fill: k ? C.ink : C.faint }, mk); });
+      arrow(pos.pool + nw, ny + nh / 2, pos.RGE - 2, ny + nh / 2, narrow ? '' : 'best', st === 'pool' || st === 'restart');
+      arrow(pos.RGE + nw, ny + nh / 2, pos.CGE - 2, ny + nh / 2, narrow ? '' : 'slows', st === 'CGE');
+      /* 监视器 */
+      var my = ny + nh + 22, mw = narrow ? VW - 12 : 3 * nw + 2 * gap;
+      svg('rect', { x: x0, y: my, width: mw, height: narrow ? 50 : 44, rx: 10, fill: st === 'restart' ? '#fbeee4' : '#f7f9fc', stroke: st === 'restart' ? '#d9772e' : C.line, 'stroke-dasharray': '4 3' }, s);
+      text(s, x0 + 12, my + 18, 'Sliding-window monitor (last W = 8 steps)', { 'font-size': narrow ? 10.5 : 12, 'font-weight': 700, fill: C.ink });
+      text(s, x0 + 12, my + (narrow ? 36 : 34), narrow ? 'soft stall: η↓ μ↑ · slows: RGE→CGE · stall: restart' : 'soft stall → shrink η, widen μ   ·   slows → switch RGE → CGE   ·   hard stall → restart from the pool', { 'font-size': narrow ? 9.5 : 11, fill: C.muted });
+      arrow(pos.CGE + nw / 2, my - 2, pos.CGE + nw / 2, ny + nh + 3, '', false);
+      arrow(pos.pool + nw / 2, my - 2, pos.pool + nw / 2, ny + nh + 3, '', st === 'restart');
+      var bottom = my + (narrow ? 50 : 44);
+      /* 探针示意小图 */
+      var mx, mY, mS;
+      if (narrow) { mS = 200; mx = (VW - mS) / 2; mY = bottom + 18; } else { mS = 214; mx = VW - mS - 10; mY = 4; }
+      svg('image', { href: heat(), x: mx, y: mY, width: mS, height: mS, preserveAspectRatio: 'none', style: 'image-rendering:auto' }, s);
+      svg('rect', { x: mx, y: mY, width: mS, height: mS, rx: 8, fill: 'none', stroke: C.line }, s);
+      var P = function (e) { return [mx + e.x * mS, mY + (1 - e.y) * mS]; };
+      var shown = run.ev.slice(0, cur);
+      shown.forEach(function (e, t) { if (e.kind === 'pool') { var p = P(e); svg('rect', { x: p[0] - 4, y: p[1] - 4, width: 8, height: 8, fill: '#fff', stroke: C.ink, 'stroke-width': 1.3 }, s); } });
+      run.path.forEach(function (sg) {
+        if (sg.t[0] > cur) return; var d = '';
+        sg.pts.forEach(function (pt, k) { if (sg.t[k] < cur || k === 0) { var p = P({ x: pt[0], y: pt[1] }); d += (d ? 'L' : 'M') + p[0].toFixed(1) + ',' + p[1].toFixed(1); } });
+        svg('path', { d: d, fill: 'none', stroke: PH[sg.phase], 'stroke-width': sg.phase === 'CGE' ? 2.6 : 2.2, 'stroke-linejoin': 'round' }, s);
+      });
+      for (var t = Math.max(0, cur - 5); t < cur; t++) { var e = run.ev[t]; if (e.kind === 'pool') continue; var p = P(e); svg('circle', { cx: p[0], cy: p[1], r: e.kind === 'cand' ? 4 : 3, fill: e.kind === 'cand' ? 'none' : '#fff', stroke: C.ink, 'stroke-width': 1.2 }, s); }
+      var bi = -1, bv = Infinity; for (t = 0; t < cur; t++) if (run.ev[t].v < bv) { bv = run.ev[t].v; bi = t; }
+      if (bi >= 0) { var bp = P(run.ev[bi]); svg('circle', { cx: bp[0], cy: bp[1], r: 5.5, fill: '#cf8c4a', stroke: '#fff', 'stroke-width': 1.8 }, s); }
+      text(s, mx + mS / 2, mY + mS + 16, 'toy 2-D landscape · darker is better', { 'text-anchor': 'middle', 'font-size': 10.5, fill: C.muted });
+      /* 预算条 */
+      var ty = narrow ? mY + mS + 40 : Math.max(bottom, mY + mS + 22) + 22, tx = x0, tw = VW - 2 * x0, cwid = tw / BUD;
+      text(s, tx, ty - 8, 'Simulator-call budget', { 'font-size': 12, 'font-weight': 700, fill: C.ink });
+      text(s, tx + tw, ty - 8, cur + ' / ' + BUD + ' calls · best f = ' + (bi < 0 ? '–' : Math.max(0, bv).toFixed(3)), { 'text-anchor': 'end', 'font-size': 11.5, fill: C.ink, 'font-variant-numeric': 'tabular-nums' });
+      for (t = 0; t < BUD; t++) {
+        var ev = run.ev[t], on = t < cur;
+        svg('rect', { x: tx + t * cwid + 0.5, y: ty, width: Math.max(1, cwid - 1), height: 18, rx: 1.5, fill: on && ev ? PH[ev.phase] : C.soft }, s);
+        if (on && accepted[t]) svg('rect', { x: tx + t * cwid + 0.5, y: ty + 20, width: Math.max(1, cwid - 1), height: 3, fill: C.ink }, s);
+        if (on && restartAt[t]) svg('path', { d: 'M' + (tx + t * cwid) + ',' + (ty - 2) + ' l4,-6 l4,6 z', fill: '#d9772e' }, s);
+      }
+      var ly = ty + 40, lx = tx;
+      [['pool', 'pool'], ['RGE', 'RGE probes'], ['CGE', 'CGE probes']].forEach(function (a) { svg('rect', { x: lx, y: ly - 9, width: 10, height: 10, rx: 2, fill: PH[a[0]] }, s); text(s, lx + 15, ly, a[1], { 'font-size': 11, fill: C.muted }); lx += (narrow ? 100 : 104); });
+      if (narrow) { lx = tx; ly += 18; }
+      svg('rect', { x: lx, y: ly - 3, width: 10, height: 3, fill: C.ink }, s); text(s, lx + 15, ly, 'accepted step', { 'font-size': 11, fill: C.muted }); lx += narrow ? 100 : 112;
+      svg('path', { d: 'M' + lx + ',' + ly + ' l5,-8 l5,8 z', fill: '#d9772e' }, s); text(s, lx + 15, ly, 'restart', { 'font-size': 11, fill: C.muted });
+      s.setAttribute('viewBox', '0 0 ' + VW + ' ' + Math.ceil(ly + 10));
+      if (playing || cur > 0) capEl.textContent = CAP[st];
+      document.getElementById('flow-play').textContent = playing ? 'Pause' : cur >= run.ev.length ? 'Replay' : 'Play';
+    }
+    function tick() { if (cur >= run.ev.length) { pause(); return; } cur++; render(); timer = setTimeout(tick, PP.reduceMotion ? 0 : (restartAt[cur] ? 700 : 110)); }
+    function pause() { playing = false; clearTimeout(timer); render(); }
+    function play() { if (cur >= run.ev.length) cur = 0; playing = true; clearTimeout(timer); tick(); }
+    document.getElementById('flow-play').addEventListener('click', function () { playing ? pause() : play(); });
+    document.getElementById('flow-step').addEventListener('click', function () { pause(); if (cur < run.ev.length) { cur++; render(); } });
+    document.getElementById('flow-reset').addEventListener('click', function () { pause(); cur = 0; capEl.textContent = 'Press Play to watch ZOAF spend a 100-call budget on a toy landscape, or click a stage.'; render(); });
+    capEl.textContent = 'Press Play to watch ZOAF spend a 100-call budget on a toy landscape, or click a stage.';
+    render(); onResize(render);
+    PP.whenVisible(root, function () { if (!PP.reduceMotion && cur === 0) setTimeout(play, 600); });
+  })();
+
   (function playground() {
     var root = document.getElementById('w-play'); if (!root) return;
     var cv = document.getElementById('play-map'), ctx = cv.getContext('2d'), N = cv.width;

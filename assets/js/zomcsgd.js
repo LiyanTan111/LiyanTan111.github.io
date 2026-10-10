@@ -19,6 +19,131 @@
   function fmtB(b) { return b >= 1000 ? (b / 1000).toFixed(1).replace('.0', '') + 'k' : String(b); }
 
   /* =====================================================================
+     0) 主图：8 次 SPICE 换一个方向 vs 10 次 SPICE 换一个产率数（二维玩具设计空间）
+     ===================================================================== */
+  (function idea() {
+    var root = document.getElementById('w-idea'); if (!root) return;
+    var host = document.getElementById('chart-idea'), capEl = document.getElementById('idea-cap');
+    var K = 4, EPS = 0.04, SIGP = 0.35, ALPHA = 3, LR = 0.06, PAIR = ['#3866aa', '#cf8c4a', '#2a8a6b', '#8a63b8'];
+    var shared = true, seed = 5, x, traj, runs, m1, m2, t, last, playing = false, timer = 0, heatURL = null;
+    function mul(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var q = Math.imul(a ^ a >>> 15, 1 | a); q = q + Math.imul(q ^ q >>> 7, 61 | q) ^ q; return ((q ^ q >>> 14) >>> 0) / 4294967296; }; }
+    function gs(r) { var u = 0, w = 0; while (u === 0) u = r(); while (w === 0) w = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * w); }
+    function Phi(z) { var q = 1 / (1 + 0.2316419 * Math.abs(z)), d = 0.3989423 * Math.exp(-z * z / 2), p = d * q * (0.3193815 + q * (-0.3565638 + q * (1.781478 + q * (-1.821256 + q * 1.330274)))); return z > 0 ? 1 - p : p; }
+    /* 三个规格（增益、带宽、功耗）的均值裕量；>= 0 才通过 */
+    function mu(p) { return [3 * (p[0] + 0.6 * p[1] - 0.75), 3 * (p[1] - 0.30 + 0.4 * (p[0] - 0.5)), 3 * (1.25 - p[0] - 0.55 * p[1])]; }
+    function margins(p, xi) { var m = mu(p); return m.map(function (v, k) { return v + SIGP * xi[k]; }); }
+    function trueY(p) { return mu(p).reduce(function (a, v) { return a * Phi(v / SIGP); }, 1); }
+    function sp(d) { return d * ALPHA > 30 ? d : Math.log(1 + Math.exp(ALPHA * d)) / ALPHA; }
+    function loss(p, xi) { var m = margins(p, xi); return sp(-m[0]) + sp(-m[1]) + sp(-m[2]) - 0.05 * m[0]; }
+    function clip(v) { return Math.max(0, Math.min(1, v)); }
+    function f2(v) { var q = v.toFixed(2); return q === '-0.00' ? '0.00' : q.replace('-', '−'); }
+    var R = mul(seed * 31 + 1), XIS = []; for (var q = 0; q < 300; q++) XIS.push([gs(R), gs(R), gs(R)]);
+    function gradF(p) { var h = 1e-3, g = [0, 0]; for (var k = 0; k < 2; k++) { var a = p.slice(), b = p.slice(); a[k] += h; b[k] -= h; var s = 0; XIS.forEach(function (xi) { s += loss(a, xi) - loss(b, xi); }); g[k] = s / XIS.length / (2 * h); } return g; }
+    function reset() { x = [0.18, 0.14]; traj = [x.slice()]; runs = 0; m1 = [0, 0]; m2 = [0, 0]; t = 0; last = null; cosSum = 0; rng = mul(seed * 977 + 3); }
+    var cosSum = 0;
+    var rng;
+    function step() {
+      var pairs = [], g = [0, 0];
+      for (var i = 0; i < K; i++) {
+        var v = [gs(rng), gs(rng)], xi = [gs(rng), gs(rng), gs(rng)], xi2 = shared ? xi : [gs(rng), gs(rng), gs(rng)];
+        var pp = [clip(x[0] + EPS * v[0]), clip(x[1] + EPS * v[1])], pm = [clip(x[0] - EPS * v[0]), clip(x[1] - EPS * v[1])];
+        var lp = loss(pp, xi), lm = loss(pm, xi2), c = (lp - lm) / (2 * EPS);
+        g[0] += c * v[0] / K; g[1] += c * v[1] / K;
+        pairs.push({ v: v, lp: lp, lm: lm, c: c, pp: pp, pm: pm });
+      }
+      /* 10 次 SPICE 的直接产率估计（基线视角） */
+      var yb = []; for (i = 0; i < 10; i++) { var m = margins(x, [gs(rng), gs(rng), gs(rng)]); yb.push(m[0] >= 0 && m[1] >= 0 && m[2] >= 0); }
+      var tg = gradF(x), cs = -(g[0] * -tg[0] + g[1] * -tg[1]) / (Math.hypot(g[0], g[1]) * Math.hypot(tg[0], tg[1]) || 1);
+      /* Adam 更新并投影回设计盒 */
+      t++; var b1 = 0.9, b2 = 0.999, nx = x.slice();
+      for (var k = 0; k < 2; k++) { m1[k] = b1 * m1[k] + (1 - b1) * g[k]; m2[k] = b2 * m2[k] + (1 - b2) * g[k] * g[k]; var mh = m1[k] / (1 - Math.pow(b1, t)), vh = m2[k] / (1 - Math.pow(b2, t)); nx[k] = clip(x[k] - LR * mh / (Math.sqrt(vh) + 1e-8)); }
+      last = { from: x.slice(), pairs: pairs, g: g, yb: yb, cos: cs }; cosSum += cs;
+      x = nx; traj.push(x.slice()); runs += 2 * K;
+    }
+    function heat() {
+      if (heatURL) return heatURL;
+      var n = 90, cv = document.createElement('canvas'); cv.width = cv.height = n; var c2 = cv.getContext('2d'), img = c2.createImageData(n, n);
+      for (var j = 0; j < n; j++) for (var i = 0; i < n; i++) { var y = trueY([(i + .5) / n, 1 - (j + .5) / n]), k = (j * n + i) * 4, a = Math.pow(y, 0.8);
+        img.data[k] = 248 + (56 - 248) * a * 0.85; img.data[k + 1] = 250 + (102 - 250) * a * 0.85; img.data[k + 2] = 252 + (170 - 252) * a * 0.85; img.data[k + 3] = 255; }
+      c2.putImageData(img, 0, 0); return heatURL = cv.toDataURL();
+    }
+    function render() {
+      clear(host);
+      var cw = host.clientWidth || 760, narrow = cw < 620, VW = narrow ? 360 : 780;
+      var s = svg('svg', { viewBox: '0 0 ' + VW + ' 10', role: 'img', 'aria-label': 'ZO-MC-SGD on a two-knob toy design space' }, host);
+      var mS = narrow ? 300 : 320, mx = narrow ? (VW - mS) / 2 : 8, my = 22;
+      text(s, mx, my - 8, 'Design space (two knobs) · shading = true yield', { 'font-size': 11.5, fill: C.muted });
+      svg('image', { href: heat(), x: mx, y: my, width: mS, height: mS, preserveAspectRatio: 'none' }, s);
+      svg('rect', { x: mx, y: my, width: mS, height: mS, rx: 8, fill: 'none', stroke: C.line }, s);
+      var P = function (p) { return [mx + p[0] * mS, my + (1 - p[1]) * mS]; };
+      /* 0.95 等产率线（marching：粗略用格点描点） */
+      var n = 160, d = '';
+      for (var j = 0; j <= n; j++) for (var i = 0; i < n; i++) { var a = trueY([i / n, j / n]) - 0.95, b = trueY([(i + 1) / n, j / n]) - 0.95; if (a * b < 0) { var fx = (i + a / (a - b)) / n, pt = P([fx, j / n]); d += 'M' + (pt[0] - 1) + ',' + pt[1] + 'h2'; } }
+      for (i = 0; i <= n; i++) for (j = 0; j < n; j++) { a = trueY([i / n, j / n]) - 0.95; b = trueY([i / n, (j + 1) / n]) - 0.95; if (a * b < 0) { var fy = (j + a / (a - b)) / n; pt = P([i / n, fy]); d += 'M' + pt[0] + ',' + (pt[1] - 1) + 'v2'; } }
+      svg('path', { d: d, stroke: C.ink, 'stroke-width': 1.8, 'stroke-linecap': 'round', opacity: .6 }, s);
+      var lab = P([0.86, 0.9]); text(s, lab[0], lab[1], 'yield ≥ 0.95', { 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 600, fill: C.ink, stroke: '#fff', 'stroke-width': 3, 'paint-order': 'stroke' });
+      /* 轨迹 */
+      svg('path', { d: traj.map(function (p, k) { var q2 = P(p); return (k ? 'L' : 'M') + q2[0].toFixed(1) + ',' + q2[1].toFixed(1); }).join(''), fill: 'none', stroke: C.ours, 'stroke-width': 2.4, 'stroke-linejoin': 'round' }, s);
+      traj.forEach(function (p) { var q2 = P(p); svg('circle', { cx: q2[0], cy: q2[1], r: 2.4, fill: C.ours }, s); });
+      /* 当前步的成对探针（放大显示） */
+      var cp = svg('clipPath', { id: 'ideaclip' }, svg('defs', {}, s)); svg('rect', { x: mx, y: my, width: mS, height: mS, rx: 8 }, cp);
+      var G = svg('g', { 'clip-path': 'url(#ideaclip)' }, s);
+      if (last) {
+        var c0 = P(last.from), SC = 2.4;
+        last.pairs.forEach(function (pr, k) {
+          var dx = pr.v[0] * EPS * mS * SC, dy = -pr.v[1] * EPS * mS * SC;
+          svg('line', { x1: c0[0] - dx, y1: c0[1] - dy, x2: c0[0] + dx, y2: c0[1] + dy, stroke: PAIR[k], 'stroke-width': 1.6, 'stroke-dasharray': '3 2' }, G);
+          svg('circle', { cx: c0[0] + dx, cy: c0[1] + dy, r: 4.5, fill: PAIR[k], stroke: '#fff', 'stroke-width': 1.2 }, G);
+          svg('circle', { cx: c0[0] - dx, cy: c0[1] - dy, r: 4.5, fill: '#fff', stroke: PAIR[k], 'stroke-width': 2 }, G);
+        });
+        var gn = Math.hypot(last.g[0], last.g[1]) || 1, L = 46;
+        var tip = [c0[0] - last.g[0] / gn * L, c0[1] + last.g[1] / gn * L];
+        var dfs = svg('defs', {}, s), mk = svg('marker', { id: 'ia', viewBox: '0 0 10 10', refX: 8, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto' }, dfs); svg('path', { d: 'M0,0 L10,5 L0,10 z', fill: C.ink }, mk);
+        svg('line', { x1: c0[0], y1: c0[1], x2: tip[0], y2: tip[1], stroke: C.ink, 'stroke-width': 2.6, 'marker-end': 'url(#ia)' }, s);
+      }
+      var cx = P(x); svg('circle', { cx: cx[0], cy: cx[1], r: 6.5, fill: C.ours, stroke: '#fff', 'stroke-width': 2 }, s);
+      var bottom = my + mS;
+      /* 右侧：两本“账” */
+      var rx = narrow ? 6 : mS + 34, rw = VW - rx - (narrow ? 6 : 8), ry = narrow ? bottom + 30 : 14;
+      function card(y, h, title, sub, col) { svg('rect', { x: rx, y: y, width: rw, height: h, rx: 12, fill: col ? '#f3f7fc' : '#fafafa', stroke: col ? 'rgba(56,102,170,.35)' : C.line }, s); text(s, rx + 14, y + 22, title, { 'font-size': narrow ? 11.5 : 13, 'font-weight': 700, fill: C.ink }); text(s, rx + 14, y + 39, sub, { 'font-size': narrow ? 10 : 11, fill: C.muted }); }
+      var hA = 46 + K * 26 + 52;
+      card(ry, hA, 'ZO-MC-SGD · 8 SPICE runs → a direction', 'pair i: x ± εvᵢ simulated under ' + (shared ? 'the same' : 'different (ablation)') + ' process sample ξᵢ', true);
+      for (var k = 0; k < K; k++) {
+        var yy = ry + 58 + k * 26, pr = last ? last.pairs[k] : null;
+        svg('circle', { cx: rx + 22, cy: yy, r: 7, fill: PAIR[k] }, s); text(s, rx + 22, yy + 3.5, String(k + 1), { 'text-anchor': 'middle', 'font-size': 9, 'font-weight': 700, fill: '#fff' });
+        [0, 1].forEach(function (u) { svg('rect', { x: rx + 36 + u * 20, y: yy - 7, width: 15, height: 14, rx: 3, fill: u ? '#fff' : PAIR[k], stroke: PAIR[k], 'stroke-width': 1.5 }, s); });
+        text(s, rx + 82, yy + 4, pr ? 'ℓ⁺ ' + f2(pr.lp) + '   ℓ⁻ ' + f2(pr.lm) : 'ℓ⁺ –   ℓ⁻ –', { 'font-size': narrow ? 10 : 11.5, fill: C.text, 'font-variant-numeric': 'tabular-nums' });
+        if (pr && !narrow) text(s, rx + rw - 14, yy + 4, '(ℓ⁺ − ℓ⁻)/2ε = ' + (pr.c < 0 ? '−' : '') + Math.abs(pr.c).toFixed(1), { 'text-anchor': 'end', 'font-size': 11, fill: C.muted, 'font-variant-numeric': 'tabular-nums' });
+      }
+      text(s, rx + 14, ry + hA - 30, last ? 'average of the 4 pairs → ĝ, one descent direction (black arrow)' : 'press Step to spend 8 SPICE runs', { 'font-size': narrow ? 10 : 11.5, fill: C.ink, 'font-weight': 600 });
+      if (last) text(s, rx + 14, ry + hA - 12, 'cos to the true descent direction: ' + f2(last.cos) + ' this step · ' + f2(cosSum / t) + ' on average', { 'font-size': narrow ? 10 : 11.5, fill: C.muted });
+      var by = ry + hA + 14, hB = 96;
+      card(by, hB, 'Direct-yield baselines · 10 SPICE runs → a number', '10 process samples at one design, each pass or fail', false);
+      for (k = 0; k < 10; k++) { var ok = last ? last.yb[k] : null; svg('circle', { cx: rx + 22 + k * 20, cy: by + 64, r: 7, fill: ok ? C.ink : '#fff', stroke: ok === null ? C.line : C.ink, 'stroke-width': 1.5 }, s); }
+      var yh = last ? last.yb.filter(Boolean).length / 10 : null;
+      text(s, rx + 22 + 10 * 20 + 8, by + 68, yh === null ? 'Ŷ = –' : 'Ŷ = ' + yh.toFixed(1) + ' · no direction', { 'font-size': narrow ? 10.5 : 12, 'font-weight': 600, fill: C.ink });
+      var end = Math.max(bottom, by + hB);
+      /* 读数 */
+      var ty2 = end + 26, Y = trueY(x);
+      [['SPICE runs', String(runs)], ['true yield at x', Y.toFixed(3)], ['steps', String(t)]].forEach(function (a, k2) {
+        var xx = (narrow ? 6 : 8) + k2 * (narrow ? 118 : 180);
+        text(s, xx, ty2, a[0], { 'font-size': 11, fill: C.muted }); text(s, xx, ty2 + 20, a[1], { 'font-size': 17, 'font-weight': 700, fill: k2 === 1 && Y >= 0.95 ? C.ours : C.ink, 'font-variant-numeric': 'tabular-nums' });
+      });
+      s.setAttribute('viewBox', '0 0 ' + VW + ' ' + (ty2 + 30));
+      document.getElementById('idea-play').textContent = playing ? 'Pause' : (Y >= 0.95 ? 'Replay' : 'Play');
+    }
+    function tick() { if (trueY(x) >= 0.95 || t >= 60) { playing = false; render(); capEl.textContent = trueY(x) >= 0.95 ? 'Reached a 0.95 yield in ' + runs + ' SPICE runs (' + t + ' steps). Each step paid 8 runs for a direction, never a full yield estimate.' : 'Stopped after 60 steps.'; return; } step(); render(); timer = setTimeout(tick, PP.reduceMotion ? 0 : 420); }
+    function pause() { playing = false; clearTimeout(timer); render(); }
+    document.getElementById('idea-play').addEventListener('click', function () { if (playing) { pause(); return; } if (trueY(x) >= 0.95 || t >= 60) reset(); playing = true; tick(); });
+    document.getElementById('idea-step').addEventListener('click', function () { pause(); step(); render(); });
+    document.getElementById('idea-reset').addEventListener('click', function () { pause(); reset(); render(); });
+    document.getElementById('idea-shared').addEventListener('change', function (e) { shared = e.target.checked; pause(); reset(); render(); capEl.textContent = shared ? 'Each pair shares one process sample, so ℓ⁺ − ℓ⁻ measures the design change.' : 'Ablation: the two runs of a pair now see different process samples, so every ℓ⁺ − ℓ⁻ also carries process noise. Press Play and compare the average cosine and the SPICE runs needed.'; });
+    reset(); render(); onResize(render);
+    capEl.textContent = 'Each pair shares one process sample, so ℓ⁺ − ℓ⁻ measures the design change. Press Play.';
+    PP.whenVisible(root, function () { if (!PP.reduceMotion && t === 0) setTimeout(function () { if (!playing && t === 0) { playing = true; tick(); } }, 700); });
+  })();
+
+  /* =====================================================================
      1) 玩具：固定样本下的产率估计是阶梯函数，softplus 裕量损失是光滑的
      ===================================================================== */
   (function flat() {

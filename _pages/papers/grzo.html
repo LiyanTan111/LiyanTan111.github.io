@@ -87,10 +87,38 @@ paper:
     <p class="pp-lead reveal">Zeroth-order (ZO) fine-tuning trains an LLM with forward passes only, so it fits in inference-level memory. Its weak spot is the gradient estimate: MeZO draws <strong>one</strong> random perturbation for the whole mini-batch, so every step follows a single, very noisy direction.</p>
     <p class="reveal">GRZO gives <strong>every example its own pseudo-independent perturbation</strong> and combines the per-example loss differences with a group-relative normalization. One step now carries <strong>B directions instead of one</strong> &mdash; with the same two forward passes, and peak memory still at the inference floor.</p>
     <div class="pp-tldr reveal"><b>TL;DR</b><p>On Llama3-8B, GRZO beats MeZO by <strong>+3.0</strong> average accuracy while staying within <strong>0.5%</strong> of the forward-only memory floor. It is a drop-in replacement for the MeZO core: inside sparse, low-rank and quantized ZO methods it lifts them by <strong>+4.9</strong> on average.</p></div>
-    <figure class="pp-figure reveal">
-      <img src="{{ site.baseurl }}/images/papers/grzo-pipeline.png" alt="Side-by-side pipeline comparison of MeZO and GRZO">
-      <figcaption><strong>MeZO vs. GRZO.</strong> MeZO (left) shares one perturbation across the mini-batch: one gradient direction per step. GRZO (right) builds pseudo-independent per-example perturbations and applies group-relative normalization: B directions per step, much lower variance, the same forward budget.</figcaption>
-    </figure>
+    <div class="pp-widget pp-pipe reveal" id="w-pipe">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">MeZO vs. GRZO, one step at a time <span class="pp-tag">Interactive</span></p>
+          <p class="pp-widget__sub">A toy 5&times;6 linear layer and a batch of B&nbsp;=&nbsp;4 examples. Walk through the four stages of one optimizer step, switch between MeZO and GRZO at any stage, and hover the cells.</p>
+        </div>
+        <div class="pp-seg" id="seg-pipe" role="group" aria-label="Method">
+          <button type="button" data-value="mezo" aria-pressed="false">MeZO</button>
+          <button type="button" data-value="grzo" aria-pressed="true">GRZO</button>
+        </div>
+      </div>
+      <nav class="pp-steps" id="pipe-steps" aria-label="Stage">
+        <button type="button" data-step="0" aria-pressed="true"><b>1</b>Perturb</button>
+        <button type="button" data-step="1" aria-pressed="false"><b>2</b>Forward &plusmn;</button>
+        <button type="button" data-step="2" aria-pressed="false"><b>3</b>Weigh</button>
+        <button type="button" data-step="3" aria-pressed="false"><b>4</b>Update</button>
+      </nav>
+      <p class="pp-pipe__cap" id="pipe-cap" aria-live="polite"></p>
+      <div class="pp-chart pp-pipe__stage" id="chart-pipe"></div>
+      <p class="pp-pipe__detail" id="pipe-detail" aria-live="polite"></p>
+      <div class="pp-pipe__ctrl">
+        <div class="pp-pipe__ex" id="pipe-ex" role="group" aria-label="Example"><span>Example</span></div>
+        <div class="pp-range" id="pipe-scale-wrap"><label for="pipe-scale">Loss scale</label><input type="range" id="pipe-scale" min="0.5" max="2" step="0.05" value="1"><output id="pipe-scale-out">&times;1.00</output></div>
+        <div class="pp-pipe__btns"><button type="button" class="pp-btn pp-btn--sm" id="pipe-resample">New draw</button><button type="button" class="pp-btn pp-btn--sm pp-btn--primary" id="pipe-next">Next stage &rarr;</button></div>
+      </div>
+    </div>
+    <details class="pp-details reveal"><summary>The paper&rsquo;s static figure</summary>
+      <figure class="pp-figure" style="margin-top:.8rem">
+        <img src="{{ site.baseurl }}/images/papers/grzo-pipeline.png" alt="Side-by-side pipeline comparison of MeZO and GRZO">
+        <figcaption><strong>MeZO vs. GRZO.</strong> MeZO (left) shares one perturbation across the mini-batch: one gradient direction per step. GRZO (right) builds pseudo-independent per-example perturbations and applies group-relative normalization: B directions per step, much lower variance, the same forward budget.</figcaption>
+      </figure>
+    </details>
   </div>
 </section>
 
@@ -169,7 +197,7 @@ paper:
   <div class="pp-wrap">
     <p class="pp-eyebrow reveal">Results</p>
     <h2 class="pp-h2 reveal">Best zeroth-order accuracy, at inference memory.</h2>
-    <p class="pp-lead reveal">Full-parameter fine-tuning for 20k steps at batch size 16 on SuperGLUE classification and QA. GRZO is the strongest ZO method on Llama3-8B (+3.0 average over MeZO, +7.2 on RTE) and on OPT-13B, narrowing the gap to first-order Adam without its memory.</p>
+    <p class="pp-lead reveal">Full-parameter fine-tuning for 20k steps at batch size 16 on SuperGLUE classification and QA. GRZO is the strongest ZO method on Llama3-8B (+3.0 average over MeZO, +7.2 on RTE) and on OPT-13B, narrowing the gap to first-order Adam without its memory. On commonsense reasoning (Commonsense-170K) the margin is larger still: <strong>68.7</strong> average accuracy against 54.7 for MeZO.</p>
     <div class="pp-widget reveal" id="w-results">
       <div class="pp-widget__head">
         <div>
@@ -184,6 +212,15 @@ paper:
       <div class="pp-chart" id="chart-results"></div>
       <div class="pp-legend"><span><i style="background:var(--s-mezo)"></i>MeZO</span><span><i style="background:var(--s-fzoo)"></i>FZOO</span><span><i style="background:var(--s-ours)"></i>GRZO (ours)</span><span><i class="tick"></i>Adam (first-order)</span></div>
       <details class="pp-details"><summary>Show the full table (incl. LoRA)</summary><div class="pp-tablewrap" id="table-results"></div></details>
+    </div>
+    <div class="pp-widget reveal" id="w-cs">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Commonsense reasoning</p>
+          <p class="pp-widget__sub">Llama3-8B fine-tuned on Commonsense-170K, accuracy (%) on seven commonsense benchmarks. Best value in each column in bold; hover a column to highlight it.</p>
+        </div>
+      </div>
+      <div class="pp-tablewrap" id="table-cs"></div>
     </div>
     <div class="pp-widget reveal" id="w-conv">
       <div class="pp-widget__head">

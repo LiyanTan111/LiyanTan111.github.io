@@ -17,7 +17,7 @@ paper:
   author_aff: [1, 1, 2, 2, 1]
   affiliations:
     - University of California, Santa Barbara
-    - National Institute of Standards and Technology, Boulder
+    - National Institute of Standards and Technology
   venue: "Under review"
   venue_meta: "arXiv preprint"
   year: 2026
@@ -96,6 +96,17 @@ paper:
     <p class="pp-lead reveal">A fabricated analog circuit only ships if it meets every specification under process variation. That probability, the <strong>yield</strong>, is what makes a design manufacturable &mdash; but every candidate has to be checked across many Monte Carlo SPICE samples, and the finite-sample estimate barely moves when the design does.</p>
     <p class="reveal"><strong>ZO-MC-SGD</strong> keeps yield as the score and changes the optimization signal. Each SPICE run is turned into continuous specification margins, a softplus loss is checked for rank agreement with yield, and paired design perturbations under shared process samples give a stochastic descent direction &mdash; no SPICE derivatives, no global surrogate model.</p>
     <div class="pp-tldr reveal"><b>TL;DR</b><p>Across five SPICE benchmarks with up to 30 design and 42 process variables, ZO-MC-SGD reaches a <strong>0.95 mean yield within 50&ndash;200 simulations</strong>. It ties the best of five black-box and learning-based baselines on the two easiest circuits and needs <strong>4&ndash;8&times; fewer simulations</strong> on the other three.</p></div>
+    <div class="pp-widget reveal" id="w-idea">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">What eight SPICE runs buy <span class="pp-tag">Interactive</span></p>
+          <p class="pp-widget__sub">A toy circuit with two design knobs and three specifications under process variation. ZO-MC-SGD spends each batch of 8 simulations on four &plusmn; pairs that share a process sample, and turns them into one descent direction on the smooth margin loss. A direct-yield baseline spends 10 simulations on a single pass/fail count at one design.</p>
+        </div>
+        <div class="pp-pipe__btns"><button type="button" class="pp-btn pp-btn--sm" id="idea-reset">Reset</button><button type="button" class="pp-btn pp-btn--sm" id="idea-step">Step (+8 runs)</button><button type="button" class="pp-btn pp-btn--sm pp-btn--primary" id="idea-play">Play</button></div>
+      </div>
+      <div class="pp-chart" id="chart-idea"></div>
+      <div class="pp-pipe__ctrl"><label class="pp-check"><input type="checkbox" id="idea-shared" checked> Same process sample within each &plusmn; pair</label><p class="pp-pipe__cap" id="idea-cap" aria-live="polite" style="margin:0;min-height:0;flex:1 1 320px"></p></div>
+    </div>
   </div>
 </section>
 
