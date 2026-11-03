@@ -1,0 +1,255 @@
+---
+layout: project
+permalink: /papers/mobilespec/
+title: "Training Specialist LLMs on Your Phone: Forward-Only Optimization via Block-Spectral Coordinates"
+description: "MobileSpec trains 1–5 MB specialists for an on-device LLM with forward passes alone. Its core algorithm, FuRA-S, searches only the block-spectral coordinates of pretrained weights: it raises a phone-use agent from 6–23% to 89–100% success and trains a personalized 8B model on an iPhone 16 Pro overnight."
+paper:
+  short: MobileSpec
+  short_html: "Mobile<em>Spec</em>"
+  subtitle: "Training Specialist LLMs on Your Phone: Forward-Only Optimization via Block-Spectral Coordinates"
+  tagline: "Your phone trains its own specialists overnight, with forward passes alone."
+  authors:
+    - Liyan Tan
+    - Yequan Zhao
+    - Ziyue Liu
+    - Yupeng Su
+    - Ruijie Zhang
+    - Zheng Zhang
+  equal: [0, 1]
+  affiliations:
+    - University of California, Santa Barbara
+  venue: "Preprint"
+  venue_meta: "Preprint"
+  year: 2026
+  date: "2026-11-03"
+  og_image: /images/papers/mobilespec-overview.png
+  tldr: "MobileSpec adapts one shared INT4 on-device LLM into 1–5 MB task specialists, trained on the phone with forward passes and automatically checked outcomes. Its algorithm, FuRA-S, searches only the block singular values of the pretrained weights, whose perturbations rotate the singular vectors the way RLVR does. It lifts a phone-use agent from 6–23% to 89–100% success and trains a personalized 8B model on an iPhone 16 Pro overnight."
+  figures:
+    - src: /images/papers/mobilespec-overview.png
+      kind: method
+      alt: "On-device training of a specialist with MobileSpec"
+  stats:
+    - value: "89–100%"
+      label: "phone-agent success after training, up from 6–23%"
+    - value: "1–5 MB"
+      label: "per specialist, 0.015–0.05% of the parameters"
+    - value: "3.5 GB"
+      label: "peak memory training an 8B model on an iPhone 16 Pro"
+    - value: "+16.25"
+      label: "points over quantized ES on an INT4 model"
+  nav:
+    - id: overview
+      label: Overview
+    - id: method
+      label: Method
+    - id: why
+      label: Why it works
+    - id: agent
+      label: Phone agents
+    - id: rlvr
+      label: RLVR
+    - id: device
+      label: On device
+    - id: faq
+      label: FAQ
+    - id: cite
+      label: Cite
+  scripts:
+    - /assets/js/mobilespec.js
+  faq:
+    - q: "What does MobileSpec do?"
+      a: "It keeps one shared, quantized LLM on the phone (the generalist) and trains a small specialist for each task the user repeats, on the phone itself while it is idle. Training uses forward passes only and learns from signals that arise during use: automatic checks of a task's outcome, or the likelihood of the user's own records."
+    - q: "Why not train with backpropagation or LoRA on the phone?"
+      a: "Backpropagation needs several times the memory of inference and is poorly supported by the quantized dataflow of on-device engines. Forward-only methods avoid that cost, but full-parameter evolution strategies keep a full-precision copy of the weights and make every specialist as large as the model, and LoRA's generic low-rank perturbations soon stop finding improving directions under ES."
+    - q: "What are block-spectral coordinates?"
+      a: "Each weight matrix is split into column blocks, and each block is factored by an untruncated SVD, so W_k = L_k diag(s_k) R_k^T reconstructs the weights exactly. FuRA-S trains only the block singular values s_k (about 0.03% of the parameters of Qwen2.5-1.5B) and freezes L_k and R_k."
+    - q: "Why does searching such a tiny space work?"
+      a: "RLVR mostly rotates the singular vectors of pretrained weights while preserving their singular values (spectral inheritance). Rescaling the singular values of each block independently shifts the blocks' relative contributions to the assembled matrix, which rotates its singular vectors while barely changing its singular values. ES therefore keeps finding improving perturbations for longer, and the rotated frames alone retain over 95% of the accuracy gain."
+    - q: "How does it run on an INT4 model?"
+      a: "Because nothing is truncated, the update can be rewritten exactly as W' = W(I + R diag(delta) R^T), a transformation of the layer input. The released INT4 weights, their scales and zero points, and the existing INT4 kernels stay untouched; each specialist stores only its full-precision delta, and delta = 0 recovers the quantized model exactly."
+    - q: "How well does it work?"
+      a: "On five MobileWorld phone-use tasks, specialists of MAI-UI-2B reach 64–100% success from a 6–23% base. On RLVR benchmarks FuRA-S is competitive with full-parameter ES while training at most 0.05% of the parameters, outperforms ES over LoRA adapters, and beats quantized ES on INT4 models by up to 16.25 points. On an iPhone 16 Pro it trains a personalized Llama-3.1-8B specialist in 10.4 hours with 3.5 GB peak memory."
+  abstract: "Large language models (LLMs) on personal devices keep user data local, but limited memory restricts their general capability. Since most user-specific tasks do not require the breadth of frontier models, a practical solution is to adapt a shared on-device model into lightweight specialists. However, backpropagation is prohibitive in memory, and users rarely provide labeled data. We present MobileSpec, a system that trains specialists with forward passes alone and learns from automatically checked task outcomes, as in reinforcement learning with verifiable rewards (RLVR). Because forward-only updates are built from random perturbations, training is efficient only when these perturbations resemble the weight changes of RLVR, which largely preserve the singular values of pretrained weights and rotate their singular vectors. The core algorithm of MobileSpec, FuRA-S, produces such perturbations while training only the block-spectral coordinates of pretrained weights, namely the singular values of their column blocks. As we show theoretically and empirically, rescaling these blocks independently shifts their relative contributions to each weight matrix and thereby rotates its singular vectors. Since this update can be rewritten as a transformation of the layer input, FuRA-S also adapts INT4 models without modifying their weights. With specialists of only 1–5 MB that update 0.015–0.05% of the parameters, MobileSpec raises the success rate of a phone-use agent from 6–23% up to 89–100% and trains a personalized 8B model on an iPhone 16 Pro overnight. On RLVR benchmarks, FuRA-S is competitive with full-parameter evolution strategies (ES) and outperforms ES over LoRA adapters and quantized ES on INT4 models."
+  bibtex: |
+    @misc{tan2026mobilespec,
+      title  = {Training Specialist {LLMs} on Your Phone: Forward-Only Optimization via Block-Spectral Coordinates},
+      author = {Tan, Liyan and Zhao, Yequan and Liu, Ziyue and Su, Yupeng and Zhang, Ruijie and Zhang, Zheng},
+      year   = {2026},
+      note   = {Liyan Tan and Yequan Zhao contributed equally}
+    }
+---
+<section class="pp-section" id="overview">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Overview</p>
+    <h2 class="pp-h2 reveal">One generalist on the phone, a specialist for every task.</h2>
+    <p class="pp-lead reveal">A phone can only hold an LLM of a few billion parameters, well below frontier models. But the tasks people actually run on their phone are narrow and personal. <strong>MobileSpec</strong> keeps one shared INT4 model on the device, the <em>generalist</em>, and trains a lightweight <em>specialist</em> for each task the user repeats, on the phone, while it is idle.</p>
+    <p class="reveal">Backpropagation does not fit in a phone app's memory, and users rarely label data. So MobileSpec trains with <strong>forward passes alone</strong>, learning from outcomes the device can check automatically or from the user's own records. Each specialist is a <strong>1&ndash;5&nbsp;MB</strong> file applied on top of the untouched INT4 weights.</p>
+    <div class="pp-tldr reveal"><b>TL;DR</b><p>Specialists of 1&ndash;5&nbsp;MB lift a phone-use agent from <strong>6&ndash;23%</strong> to <strong>89&ndash;100%</strong> success on three of five tasks, and MobileSpec trains a personalized <strong>8B</strong> model on an <strong>iPhone 16 Pro overnight</strong>, peaking at 3.5&nbsp;GB of memory.</p></div>
+
+    <div class="pp-widget reveal" id="w-sys">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">A specialist, trained overnight <span class="pp-tag">Interactive</span></p>
+          <p class="pp-widget__sub">Pick a task the phone agent keeps failing, then train its specialist. Perturbed copies of the model try the task in sandboxed apps, and forward-only ES moves the block singular values toward the better ones. Success rates are the paper&rsquo;s MobileWorld results for MAI-UI-2B; the members&rsquo; episodes are drawn schematically.</p>
+        </div>
+        <div class="pp-pipe__btns"><button type="button" class="pp-btn pp-btn--sm" id="sys-reset">Reset</button><button type="button" class="pp-btn pp-btn--sm pp-btn--primary" id="sys-train">Train tonight</button></div>
+      </div>
+      <div class="pp-sys__tasks" id="sys-tasks" role="group" aria-label="Task"></div>
+      <div class="pp-chart" id="chart-sys"></div>
+      <p class="pp-pipe__cap" id="sys-cap" aria-live="polite" style="margin-top:.6rem"></p>
+    </div>
+    <details class="pp-details reveal"><summary>The paper&rsquo;s static figure</summary>
+      <figure class="pp-figure" style="margin-top:.8rem">
+        <img src="{{ site.baseurl }}/images/papers/mobilespec-overview.png" alt="On-device training of a specialist with MobileSpec">
+        <figcaption><strong>On-device training of a specialist with MobileSpec.</strong> When the generalist agent fails at a task the user repeats, MobileSpec trains a specialist for it overnight. Perturbed models attempt the task in sandboxed apps, and forward-only ES moves the block singular values toward those of the better members. The specialist is a 2&nbsp;MB vector &delta; applied on top of the shared INT4 generalist.</figcaption>
+      </figure>
+    </details>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="method">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Method</p>
+    <h2 class="pp-h2 reveal">FuRA-S: search only the block-spectral coordinates.</h2>
+    <p class="pp-lead reveal">Forward-only training builds every update from random perturbations, so it learns quickly only when those perturbations look like the weight changes the task needs. FuRA-S picks a search space that is tiny enough to store per task and shaped like the changes RLVR makes.</p>
+    <div class="pp-cards">
+      <div class="pp-card reveal"><span class="pp-card__num">1</span><h3>Block-spectral coordinates</h3><p>Split each weight matrix into column blocks and factor every block by an untruncated SVD, \(W_k = L_k\,\mathrm{diag}(s_k)\,R_k^\top\). Only the block singular values \(s_k\) are trained, about 0.03% of the parameters.</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">2</span><h3>Forward-only ES</h3><p>Score antithetic pairs \(\theta \pm Dz_j\), with each singular value perturbed in proportion to its own size, standardize their fitness, and move toward the better members. Directions are regenerated from seeds and never stored.</p></div>
+      <div class="pp-card reveal"><span class="pp-card__num">3</span><h3>Runs on INT4 as is</h3><p>Because nothing is truncated, the update is exactly a transformation of the layer input. The released INT4 weights and kernels stay untouched, and a specialist stores only its vector \(\delta\).</p></div>
+    </div>
+    <div class="pp-math reveal">
+      $$W' = W\,(I + E), \qquad E = R\,\mathrm{diag}(\delta)\,R^\top, \qquad y = \underbrace{W_q}_{\text{INT4, frozen}}\bigl(x + R\,\mathrm{diag}(\delta)\,R^\top x\bigr)$$
+    </div>
+    <p class="pp-caption reveal">With \(s'_k = s_k \odot (1+\delta_k)\) and \(R = \mathrm{blockdiag}_k(R_k)\). The frozen \(R\) is stored in 4 bits and shared by all specialists; \(\delta = 0\) recovers the quantized model exactly.</p>
+
+    <div class="pp-widget reveal" id="w-spec">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Rescale the blocks, rotate the frames <span class="pp-tag">Live SVD</span></p>
+          <p class="pp-widget__sub">A 12&times;12 toy weight matrix with a decaying spectrum. Perturb its block singular values and watch the singular values of the whole matrix barely move while its singular vectors rotate. With one block, FuRA-S collapses to rescaling the global singular values, and the frames stop rotating.</p>
+        </div>
+        <div class="pp-seg" id="seg-k" role="group" aria-label="Number of blocks">
+          <button type="button" data-value="1" aria-pressed="false">1 block</button>
+          <button type="button" data-value="2" aria-pressed="false">2</button>
+          <button type="button" data-value="3" aria-pressed="false">3</button>
+          <button type="button" data-value="4" aria-pressed="true">4 blocks</button>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-spec"></div>
+      <div class="pp-pipe__ctrl">
+        <div class="pp-range"><label for="spec-size">Perturbation size &Vert;&Delta;W&Vert;/&Vert;W&Vert;</label><input type="range" id="spec-size" min="1" max="8" step="0.5" value="3"><output id="spec-size-out">3%</output></div>
+        <div class="pp-pipe__btns"><button type="button" class="pp-btn pp-btn--sm pp-btn--primary" id="spec-draw">New perturbation</button></div>
+      </div>
+      <p class="pp-caption" style="margin-top:.6rem">Rotation is the largest principal angle between the leading 3-dimensional singular subspaces before and after the update; spectrum change is the relative change of the singular values. Every update is scaled to the same &Vert;&Delta;W&Vert;. Toy numbers; on Qwen2.5-1.5B matrices the paper measures about 9&deg; of rotation, four times that of a dense update.</p>
+    </div>
+  </div>
+</section>
+
+<section class="pp-section" id="why">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Why it works</p>
+    <h2 class="pp-h2 reveal">The directions of a search space matter more than its size.</h2>
+    <p class="pp-lead reveal">ES learns only while some perturbations still beat the current model. In LoRA and full-parameter search spaces that fraction drops to zero within 50 iterations. FuRA-S keeps finding improving perturbations through iteration 125 and reaches the highest accuracy, with as few values as the smaller Uni-LoRA, which drifts furthest from the base model.</p>
+    <div class="pp-widget reveal" id="w-search">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">ES in four search spaces: hover to compare</p>
+          <p class="pp-widget__sub">Countdown with Qwen2.5-1.5B-Instruct, perturbations matched in KL divergence: test accuracy, the share of the 30 perturbations per iteration that beat the unperturbed model, and the KL divergence from the base policy per token.</p>
+        </div>
+      </div>
+      <div class="pp-trio" id="search-panels"></div>
+      <div class="pp-legend" id="search-legend"></div>
+      <p class="pp-caption">Curves read from the paper&rsquo;s vector figure. Around the base model, 74.0% of frame-rotating perturbations beat it versus 70.8% for all weights; around the FuRA-S model at iteration 100, 8.3% still do, versus 1.0% for full-parameter and none for LoRA perturbations.</p>
+    </div>
+    <p class="pp-takeaway reveal"><b>Spectral inheritance.</b> Perturbing only the block singular values preserves the spectrum of each weight matrix but rotates both of its frames, and the trained weights inherit the same structure: the rotated frames alone retain over 95% of the accuracy gain on MATH and on Countdown.</p>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="agent">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">Phone agents</p>
+    <h2 class="pp-h2 reveal">From rarely to reliably.</h2>
+    <p class="pp-lead reveal">MAI-UI-2B operates real Android apps from screenshots in MobileWorld. On five tasks where it succeeds less than a quarter of the time, a specialist that changes only 516,096 block singular values (0.024% of the model) trains for 15 iterations, 960 episodes. A <strong>step-wise fitness</strong> credits each action against what the other members did on the same screen, so a good action is rewarded even when the member's own episode fails for other reasons.</p>
+    <div class="pp-widget reveal" id="w-agent">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Success rate by task</p>
+          <p class="pp-widget__sub">Each column is a MobileWorld task, evaluated on 64 new episodes. The line rises from the generalist to the specialist trained with step-wise fitness; the orange dot is the same training with episode rewards only. The top row is the gain.</p>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-agent"></div>
+      <div class="pp-legend"><span><i style="background:#9aa6b6"></i>Generalist</span><span><i style="background:var(--s-mezo)"></i>Episode reward</span><span><i style="background:var(--s-ours)"></i>Step-wise fitness (ours)</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="pp-section" id="rlvr">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">RLVR</p>
+    <h2 class="pp-h2 reveal">Full-parameter ES accuracy from 0.05% of the parameters.</h2>
+    <p class="pp-lead reveal">On Countdown and MATH, FuRA-S is on par with full-parameter ES while training at most 0.05% of the parameters it perturbs. It outperforms ES over LoRA and VeRA adapters on every model, and without computing a single gradient it surpasses PPO, GRPO and Dr.&nbsp;GRPO on four of five models.</p>
+    <div class="pp-widget reveal" id="w-rlvr">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Accuracy by model and benchmark</p>
+          <p class="pp-widget__sub" id="rlvr-sub"></p>
+        </div>
+        <div class="pp-seg" id="seg-rlvr" role="group" aria-label="Benchmark">
+          <button type="button" data-value="countdown" aria-pressed="true">Countdown</button>
+          <button type="button" data-value="math" aria-pressed="false">MATH</button>
+        </div>
+      </div>
+      <div class="pp-chart" id="chart-rlvr"></div>
+      <div class="pp-legend" id="rlvr-legend"></div>
+    </div>
+
+    <div class="pp-widget reveal" id="w-int4">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Training the released INT4 model</p>
+          <p class="pp-widget__sub">Countdown accuracy of the GPTQ-INT4 checkpoints over training, with the 4-bit weights left unchanged. Quantized ES (QES) perturbs the quantized weights themselves; the dotted line is its best accuracy over the whole run.</p>
+        </div>
+        <div class="pp-seg" id="seg-int4" role="group" aria-label="Model">
+          <button type="button" data-value="1.5B" aria-pressed="false">Qwen2.5-1.5B</button>
+          <button type="button" data-value="3B" aria-pressed="true">Qwen2.5-3B</button>
+        </div>
+      </div>
+      <p class="pp-conv__summary" id="int4-summary"></p>
+      <div class="pp-chart" id="chart-int4"></div>
+      <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>FuRA-S on INT4 (ours)</span><span><i style="background:var(--s-mezo)"></i>QES</span></div>
+      <p class="pp-caption">FuRA-S values from the paper&rsquo;s table; QES read from its figure, matching the reported best and final accuracies. Serving a specialist on the INT4 kernels adds about 9% memory and 11&ndash;15% decoding time per token.</p>
+    </div>
+  </div>
+</section>
+
+<section class="pp-section pp-section--tint" id="device">
+  <div class="pp-wrap">
+    <p class="pp-eyebrow reveal">On device</p>
+    <h2 class="pp-h2 reveal">An 8B specialist, trained on an iPhone overnight.</h2>
+    <p class="pp-lead reveal">On an iPhone 16 Pro, MobileSpec trains a specialist for one LaMP movie-tagging user on top of the released INT4 Llama-3.1-8B-Instruct, using the likelihood of the user's own records as fitness. The 5.5&nbsp;GB model is larger than the 5.3&nbsp;GB an app may use, so MobileSpec streams the decoder layers from flash.</p>
+    <div class="pp-widget reveal" id="w-iphone">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Twenty iterations, 10.4 hours, one phone</p>
+          <p class="pp-widget__sub">Training and validation loss over wall-clock time on the phone, and where the memory goes. Hover the curves.</p>
+        </div>
+      </div>
+      <div class="pp-iphone">
+        <div><div class="pp-chart" id="chart-iphone"></div>
+          <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>validation</span><span><i style="background:#9db8dc"></i>training</span><span><i class="sq" style="background:#fff;box-shadow:inset 0 0 0 1.5px #9aa6b6"></i>base model</span></div></div>
+        <div class="pp-chart" id="chart-mem"></div>
+      </div>
+      <p class="pp-caption">Validation loss falls from 0.85 to 0.19, and the specialist answers 8 of 15 held-out queries correctly against 5 for the generalist. Forward computation takes 97% of the time; streaming the layers takes 14 seconds per iteration. Curves read from the paper&rsquo;s figure.</p>
+    </div>
+
+    <div class="pp-widget reveal" id="w-lamp">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Personalization with the user's own records</p>
+          <p class="pp-widget__sub">LaMP with Llama-3.1-8B-Instruct in the time-based setting: each user gets their own specialist, trained on earlier records and tested on later queries. Per-user LoRA is trained by backpropagation; FuRA-S uses forward passes only and stores 4.98&nbsp;MB per user. Best per row in bold.</p>
+        </div>
+      </div>
+      <div class="pp-tablewrap" id="table-lamp"></div>
+    </div>
+  </div>
+</section>

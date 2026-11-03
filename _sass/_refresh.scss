@@ -543,3 +543,6 @@ html:has(.paper-page) { background: #f5f8fc; }
     tbody tr:hover td { background: #f8fafc; }
     td:first-child { color: $muted; font-variant-numeric: tabular-nums; white-space: nowrap; }
 }
+
+/* 共同一作标注 */
+.paper-equal { font-size: .82em; color: var(--muted, #6a7585); white-space: nowrap; }

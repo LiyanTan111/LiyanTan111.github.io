@@ -32,11 +32,12 @@
       <p class="pp-hero__title" itemprop="headline">{{ p.subtitle }}</p>
       {% if p.tagline %}<p class="pp-hero__tagline">{{ p.tagline }}</p>{% endif %}
       <p class="pp-hero__authors">
-        {% for a in p.authors %}<span class="pp-author{% if a == 'Liyan Tan' %} pp-author--me{% endif %}" itemprop="author">{{ a }}{% if p.author_aff %}<sup>{{ p.author_aff[forloop.index0] }}</sup>{% endif %}</span> {% endfor %}
+        {% for a in p.authors %}<span class="pp-author{% if a == 'Liyan Tan' %} pp-author--me{% endif %}" itemprop="author">{{ a }}{% if p.author_aff %}<sup>{{ p.author_aff[forloop.index0] }}</sup>{% endif %}{% if p.equal contains forloop.index0 %}<sup>*</sup>{% endif %}</span> {% endfor %}
       </p>
       <p class="pp-hero__affil">
         {% for af in p.affiliations %}<span>{% if p.affiliations.size > 1 %}<sup>{{ forloop.index }}</sup>{% endif %}{{ af }}</span>{% endfor %}
       </p>
+      {% if p.equal %}<p class="pp-hero__equal"><sup>*</sup>Equal contribution</p>{% endif %}
       <div class="pp-actions">
         {% if p.arxiv %}<a class="pp-btn pp-btn--primary" href="https://arxiv.org/pdf/{{ p.arxiv }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1.5V9h5.5"/></svg>Paper</a>
         <a class="pp-btn" href="https://arxiv.org/abs/{{ p.arxiv }}"><i class="ai ai-arxiv" aria-hidden="true"></i>arXiv</a>{% endif %}

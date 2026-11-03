@@ -78,6 +78,19 @@ You can find more details on [Google Scholar](https://scholar.google.com/citatio
 </div>
 </div>
 
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--preprint">Preprint</div><img src='{{ site.baseurl }}/images/mobilespec.png' alt="MobileSpec" width="100%"></div></div>
+<div class='paper-box-text' markdown="1">
+
+[Training Specialist LLMs on Your Phone: Forward-Only Optimization via Block-Spectral Coordinates]({{ site.baseurl }}/papers/mobilespec/)
+
+**Liyan Tan**<sup>\*</sup>, Yequan Zhao<sup>\*</sup>, Ziyue Liu, Yupeng Su, Ruijie Zhang, Zheng Zhang <span class="paper-equal">(<sup>\*</sup>equal contribution)</span>
+
+<span class="paper-keywords">On-device LLM training · Forward-only optimization · RLVR</span>
+
+<div class="paper-actions"><a class="pill-btn pill-btn--primary" href="{{ site.baseurl }}/papers/mobilespec/"><i class="fas fa-book-open" aria-hidden="true"></i> Project page</a></div>
+</div>
+</div>
+
 <div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--preprint">arXiv 2026</div><img src='{{ site.baseurl }}/images/iapo.png' alt="IAPO" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
