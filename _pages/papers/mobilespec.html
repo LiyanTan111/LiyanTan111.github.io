@@ -18,8 +18,10 @@ paper:
   equal: [0, 1]
   affiliations:
     - University of California, Santa Barbara
-  venue: "Preprint"
-  venue_meta: "Preprint"
+  venue: "arXiv 2026"
+  venue_meta: "arXiv"
+  arxiv: "2611.04797"
+  doi: "10.48550/arXiv.2611.04797"
   year: 2026
   date: "2026-11-03"
   og_image: /images/papers/mobilespec-overview.png
@@ -72,10 +74,13 @@ paper:
   abstract: "Large language models (LLMs) on personal devices keep user data local, but limited memory restricts their general capability. Since most user-specific tasks do not require the breadth of frontier models, a practical solution is to adapt a shared on-device model into lightweight specialists. However, backpropagation is prohibitive in memory, and users rarely provide labeled data. We present MobileSpec, a system that trains specialists with forward passes alone and learns from automatically checked task outcomes, as in reinforcement learning with verifiable rewards (RLVR). Because forward-only updates are built from random perturbations, training is efficient only when these perturbations resemble the weight changes of RLVR, which largely preserve the singular values of pretrained weights and rotate their singular vectors. The core algorithm of MobileSpec, FuRA-S, produces such perturbations while training only the block-spectral coordinates of pretrained weights, namely the singular values of their column blocks. As we show theoretically and empirically, rescaling these blocks independently shifts their relative contributions to each weight matrix and thereby rotates its singular vectors. Since this update can be rewritten as a transformation of the layer input, FuRA-S also adapts INT4 models without modifying their weights. With specialists of only 1–5 MB that update 0.015–0.05% of the parameters, MobileSpec raises the success rate of a phone-use agent from 6–23% up to 89–100% and trains a personalized 8B model on an iPhone 16 Pro overnight. On RLVR benchmarks, FuRA-S is competitive with full-parameter evolution strategies (ES) and outperforms ES over LoRA adapters and quantized ES on INT4 models."
   bibtex: |
     @misc{tan2026mobilespec,
-      title  = {Training Specialist {LLMs} on Your Phone: Forward-Only Optimization via Block-Spectral Coordinates},
-      author = {Tan, Liyan and Zhao, Yequan and Liu, Ziyue and Su, Yupeng and Zhang, Ruijie and Zhang, Zheng},
-      year   = {2026},
-      note   = {Liyan Tan and Yequan Zhao contributed equally}
+      title         = {Training Specialist {LLMs} on Your Phone: Forward-Only Optimization via Block-Spectral Coordinates},
+      author        = {Tan, Liyan and Zhao, Yequan and Liu, Ziyue and Su, Yupeng and Zhang, Ruijie and Zhang, Zheng},
+      year          = {2026},
+      eprint        = {2611.04797},
+      archivePrefix = {arXiv},
+      primaryClass  = {cs.LG},
+      note          = {Liyan Tan and Yequan Zhao contributed equally}
     }
 ---
 <section class="pp-section" id="overview">
