@@ -122,6 +122,25 @@ paper:
     </div>
     <p class="pp-caption reveal">With \(s'_k = s_k \odot (1+\delta_k)\) and \(R = \mathrm{blockdiag}_k(R_k)\). The frozen \(R\) is stored in 4 bits and shared by all specialists; \(\delta = 0\) recovers the quantized model exactly.</p>
 
+    <div class="pp-widget reveal" id="w-ellipse">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Why rescaling blocks turns the whole matrix <span class="pp-tag">Animated</span></p>
+          <p class="pp-widget__sub">The ellipse is where a toy weight matrix sends the unit sphere: its axes are the output frame, their lengths the singular values. On the right the matrix has two column blocks. Each block keeps its own axes (orange, green) and only stretches, but the two stretch by different amounts, so the axes of the whole matrix, set by \(WW^\top=\sum_k L_k\,\mathrm{diag}(s_k)^2 L_k^\top\), turn. Rescaling the global singular values (left) stretches the axes in place.</p>
+        </div>
+      </div>
+      <div class="pp-pipe__ctrl" style="margin-bottom:.6rem">
+        <div class="pp-seg" id="seg-ell" role="group" aria-label="How the blocks are rescaled">
+          <button type="button" data-value="diff" aria-pressed="true">Blocks rescaled differently</button>
+          <button type="button" data-value="alike" aria-pressed="false">Blocks rescaled alike</button>
+        </div>
+        <div class="pp-pipe__btns"><button type="button" class="pp-btn pp-btn--sm" id="ell-play">Pause</button></div>
+      </div>
+      <div class="pp-twin" id="ell-panels"></div>
+      <div class="pp-legend"><span><i style="background:var(--s-ours)"></i>whole matrix and its axis u₁</span><span><i style="background:var(--s-mezo)"></i>block 1</span><span><i style="background:var(--s-fzoo)"></i>block 2</span><span><i class="sq" style="background:#fff;box-shadow:inset 0 0 0 1.5px #98a2b1"></i>before</span></div>
+      <p class="pp-caption">Rescaling every block by the same factor rescales the whole matrix and turns nothing. The turn comes from rescaling the blocks independently, which is exactly what ES perturbations do.</p>
+    </div>
+
     <div class="pp-widget reveal" id="w-spec">
       <div class="pp-widget__head">
         <div>
@@ -161,6 +180,56 @@ paper:
       <div class="pp-legend" id="search-legend"></div>
       <p class="pp-caption">Curves read from the paper&rsquo;s vector figure. Around the base model, 74.0% of frame-rotating perturbations beat it versus 70.8% for all weights; around the FuRA-S model at iteration 100, 8.3% still do, versus 1.0% for full-parameter and none for LoRA perturbations.</p>
     </div>
+    <div class="pp-widget reveal" id="w-frames">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">Frames rotate, spectrum stays <span class="pp-tag">3D &middot; drag to rotate</span></p>
+          <p class="pp-widget__sub">A toy 3&times;12 weight matrix and a task whose best weights keep its spectrum but turn its output frame by 23&deg;, the kind of change RLVR makes. ES over the 12 block singular values carries the frame to the target &#9733;, with the 16 perturbed members of each iteration in orange. ES over the global singular values can only stretch the axes in place and stalls.</p>
+        </div>
+        <div class="pp-seg" id="seg-frames" role="group" aria-label="Search space">
+          <button type="button" data-value="block" aria-pressed="true">Block singular values</button>
+          <button type="button" data-value="glob" aria-pressed="false">Global singular values</button>
+        </div>
+      </div>
+      <div class="pp-frames">
+        <div class="pp-chart" id="chart-frames3d"></div>
+        <div class="pp-frames__side">
+          <div class="pp-toy__stats">
+            <div class="pp-toy__stat"><span>ES iteration</span><b id="fr-it">0</b></div>
+            <div class="pp-toy__stat is-ours"><span>Output frame turned<small>angle of \(u_1\) from \(U_0\)</small></span><b id="fr-ang">0&deg;</b></div>
+            <div class="pp-toy__stat"><span>Spectrum change</span><b id="fr-spec">0%</b></div>
+            <div class="pp-toy__stat"><span>Distance to target<small>relative to the start</small></span><b id="fr-dist">100%</b></div>
+          </div>
+          <div class="pp-chart" id="chart-frames-dist"></div>
+          <div class="pp-legend" style="margin-top:0"><span><i style="background:var(--s-ours)"></i>block</span><span><i style="background:#98a2b1"></i>global</span></div>
+          <div class="pp-pipe__btns"><button type="button" class="pp-btn pp-btn--sm" id="fr-reset">Reset</button><button type="button" class="pp-btn pp-btn--sm pp-btn--primary" id="fr-play">Run ES</button></div>
+        </div>
+      </div>
+      <p class="pp-widget__title" style="margin-top:1.4rem;font-size:.98rem">On real weights</p>
+      <p class="pp-widget__sub">Rotation of the leading singular vectors of eight Qwen2.5-1.5B-Instruct matrices under updates of the same size as the one FuRA-S learns on Countdown.</p>
+      <div class="pp-chart" id="chart-frames-real"></div>
+    </div>
+
+    <div class="pp-widget reveal" id="w-rebase">
+      <div class="pp-widget__head">
+        <div>
+          <p class="pp-widget__title">The gain lives in the frames <span class="pp-tag">Interactive</span></p>
+          <p class="pp-widget__sub">Split every trained weight matrix into its frames and its spectrum, \(W=U_T\,[(1-\alpha)\Sigma_0+\alpha\Sigma_T]\,V_T^\top\). Slide \(\alpha\) to put the pretrained spectrum back under the trained frames, or switch to the pretrained frames with the trained spectrum. MATH: Qwen2.5-Math-7B, average of MATH500, Minerva and OlympiadBench. Countdown: Qwen2.5-1.5B-Instruct, mean of two seeds.</p>
+        </div>
+        <div class="pp-seg" id="seg-rebase" role="group" aria-label="Which frames">
+          <button type="button" data-value="trained" aria-pressed="true">Trained frames</button>
+          <button type="button" data-value="mirror" aria-pressed="false">Pretrained frames</button>
+        </div>
+      </div>
+      <div class="pp-pipe__ctrl" style="margin-bottom:.8rem">
+        <div class="pp-range"><label for="rebase-alpha">Spectrum</label><input type="range" id="rebase-alpha" min="0" max="2" step="1" value="0"><output id="rebase-alpha-out">&alpha; = 0</output></div>
+        <div class="pp-pipe__btns"><button type="button" class="pp-btn pp-btn--sm pp-btn--primary" id="rebase-sweep">Sweep &alpha;</button></div>
+      </div>
+      <p class="pp-conv__summary" id="rebase-summary"></p>
+      <div class="pp-chart" id="chart-rebase"></div>
+      <div class="pp-legend"><span><i style="background:#3866aa"></i>this combination</span><span><i style="background:transparent;border-top:2px dashed #98a2b1;border-radius:0;height:0"></i>pretrained model</span><span><i style="background:transparent;border-top:2px dashed #18202c;border-radius:0;height:0"></i>trained model</span></div>
+    </div>
+
     <p class="pp-takeaway reveal"><b>Spectral inheritance.</b> Perturbing only the block singular values preserves the spectrum of each weight matrix but rotates both of its frames, and the trained weights inherit the same structure: the rotated frames alone retain over 95% of the accuracy gain on MATH and on Countdown.</p>
   </div>
 </section>

@@ -104,7 +104,7 @@ Yifan Yang, Zhen Zhang, Jiayi Tian, **Liyan Tan**, Zheng Zhang
 </div>
 </div>
 
-<div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--preprint">arXiv 2026</div><img src='{{ site.baseurl }}/images/fura.png' alt="FuRA" width="100%"></div></div>
+<div class='paper-box'><div class='paper-box-image'><div><div class="badge badge--accepted">NeurIPS 2026</div><img src='{{ site.baseurl }}/images/fura.png' alt="FuRA" width="100%"></div></div>
 <div class='paper-box-text' markdown="1">
 
 [FuRA: Full-Rank Parameter-Efficient Fine-Tuning with Spectral Preconditioning](https://arxiv.org/abs/2605.22869)
