@@ -71,7 +71,7 @@
 {\color{navy}\hrule height 1.6pt}
 \vspace{0.5em}
 
-\noindent Zeroth-order and memory-efficient optimization for large language model fine-tuning and analog/RF circuit design.
+\noindent Zeroth-order and forward-only optimization for LLM fine-tuning, on-device training, and analog/RF circuit design.
 
 %================= EDUCATION =================
 \cvsection{Education}
@@ -98,17 +98,20 @@
 \pub{GRZO: Group-Relative Zeroth-Order Optimization for Large Language Model Fine-Tuning\paperlink{https://arxiv.org/abs/2606.02857}}
 {\me, Yequan Zhao, Yifan Yang, Ruijie Zhang, Xinling Yu, Zheng Zhang, \textit{Findings of the Association for Computational Linguistics: EMNLP}, 2026.}
 
+\pub{Training Specialist LLMs on Your Phone: Forward-Only Optimization via Block-Spectral Coordinates\paperlink{https://arxiv.org/abs/2611.04797}}
+{\me$^{*}$, Yequan Zhao$^{*}$, Ziyue Liu, Yupeng Su, Ruijie Zhang, Zheng Zhang, \textit{arXiv preprint arXiv:2611.04797}, 2026. {\small\color{muted}($^{*}$equal contribution)}}
+
 \pub{ZOAF: Towards Efficient Zeroth-Order Optimization for Analog/RF Circuit Design\paperlink{https://arxiv.org/abs/2606.02869}}
 {\me, Yequan Zhao, Jinming Lu, Ben F. Jamroz, Ari Feldman, Zheng Zhang, under review at \textit{IEEE TCAD}, arXiv:2606.02869, 2026.}
 
 \pub{Simulation-Efficient Analog Circuit Yield Optimization via Monte Carlo Zeroth-Order Gradient Estimation\paperlink{https://arxiv.org/abs/2609.30678}}
 {\me, Yequan Zhao, Ben F. Jamroz, Ari Feldman, Zheng Zhang, under review, arXiv:2609.30678, 2026.}
 
+\pub{FuRA: Full-Rank Parameter-Efficient Fine-Tuning with Spectral Preconditioning\paperlink{https://arxiv.org/abs/2605.22869}}
+{Yequan Zhao, Ruijie Zhang, \me, Niall Moran, Tong Qin, Zheng Zhang, \textit{Advances in Neural Information Processing Systems (NeurIPS)}, 2026.}
+
 \pub{IAPO: Input Attribution-Aware Policy Optimization for Tool Use in Small Multimodal Agents\paperlink{https://arxiv.org/abs/2606.11652}}
 {Yifan Yang, Zhen Zhang, Jiayi Tian, \me, Zheng Zhang, \textit{arXiv preprint arXiv:2606.11652}, 2026.}
-
-\pub{FuRA: Full-Rank Parameter-Efficient Fine-Tuning with Spectral Preconditioning\paperlink{https://arxiv.org/abs/2605.22869}}
-{Yequan Zhao, Ruijie Zhang, \me, Niall Moran, Tong Qin, Zheng Zhang, \textit{arXiv preprint arXiv:2605.22869}, 2026.}
 
 \pub{MUON+: Towards More Effective Muon via One Additional Normalization Step for LLM Pre-training\paperlink{https://arxiv.org/abs/2602.21545}}
 {Ruijie Zhang, Yequan Zhao, Ziyue Liu, Zhengyang Wang, Yupeng Su, \me, Zheng Zhang, \textit{arXiv preprint arXiv:2602.21545}, 2026.}
@@ -120,10 +123,12 @@
 \cvsection{Research Projects}
 
 \needspace{5\baselineskip}
-\entry{\textbf{Variance-Reduced Zeroth-Order Optimization for LLM Fine-Tuning} \textbar{} Advisor: Zheng Zhang}{Mar 2025 - Present}
+\entry{\textbf{Zeroth-Order and Forward-Only Optimization for LLMs} \textbar{} Advisor: Zheng Zhang}{Mar 2025 - Present}
 \begin{cvitems}
   \item Proposed GRZO, a group-relative zeroth-order optimizer that assigns a pseudo-independent perturbation to every mini-batch example, raising the effective gradient-direction count from one to the batch size at no additional forward cost.
   \item Proved directional unbiasedness with variance shrinking proportionally to the batch size; at the same inference-level memory footprint and comparable wall-clock cost, improved Llama3-8B average accuracy by $+3.0$ over MeZO and lifted sparse, low-rank, and quantized ZO variants by $+4.9$ on average.
+  \item Co-led MobileSpec, which trains task specialists of an on-device INT4 LLM with forward passes alone. Its search space, FuRA-S, rescales only the block singular values of pretrained weights (0.015--0.05\% of parameters), which rotates their singular vectors the way RLVR does.
+  \item With 1--5\,MB specialists, lifted a phone-use agent from 6--23\% to 89--100\% success on three of five tasks, and trained a personalized 8B model on an iPhone 16 Pro overnight at 3.5\,GB peak memory.
 \end{cvitems}
 
 \vspace{0.6em}
